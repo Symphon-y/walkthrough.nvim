@@ -1,0 +1,228 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "walkthrough-nvim revision",
+  "description": "The JSON shape for one walkthrough revision. This mirrors lua/walkthrough-nvim/model/schema.lua exactly -- that file is the actual enforced validator (run :WalkthroughValidate {path} to check a file against it); this document exists so an LLM writing a revision by hand has one place to read the contract, including the parts (flows, data_lineage) the validator does not yet strictly check.",
+  "type": "object",
+  "required": ["schema_version", "walkthrough_id", "revision_id", "phase", "status"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "walkthrough_id": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9_-]+$",
+      "description": "Stable slug for the whole topic (e.g. \"checkout-refund-flow\"), shared across every revision. Used as a path component -- keep it a plain slug."
+    },
+    "revision_id": {
+      "type": "string",
+      "pattern": "^(expl|impl)-[0-9]{3}$",
+      "description": "Minted by resolving the next path first (see \"Resolving the write path\" below) -- never invent this yourself."
+    },
+    "phase": { "enum": ["exploration", "implementation"] },
+    "parent_revision": { "type": ["string", "null"] },
+    "created_at": { "type": "string", "format": "date-time" },
+    "created_by": { "type": "string", "default": "claude" },
+    "source_commit": { "type": "string", "description": "git short-sha at write time -- a staleness hint, not full re-validation." },
+    "status": { "enum": ["draft", "corrected", "reconciled", "final"], "description": "Revision-level status. A freshly written revision is \"draft\"." },
+
+    "intent": {
+      "type": "object",
+      "properties": {
+        "summary": { "type": "string" },
+        "requirement_ref": { "type": "string" }
+      }
+    },
+
+    "groups": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "name"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^group:[A-Za-z0-9_-]+$" },
+          "name": { "type": "string" },
+          "parent": { "type": ["string", "null"] }
+        }
+      }
+    },
+
+    "components": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/component" }
+    },
+    "relationships": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/relationship" }
+    },
+    "decisions": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/decision" }
+    },
+    "assumptions": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/assumption" }
+    },
+    "corrections": {
+      "type": "array",
+      "description": "Never write these yourself when producing an exploration/as-built revision -- they are appended by the engineer via the browser UI. When reconciling a corrected revision (walkthrough-reconcile), read them, address each one, and start the new revision's corrections array empty again.",
+      "items": { "$ref": "#/definitions/correction" }
+    },
+
+    "flows": {
+      "type": "array",
+      "description": "Sequence/temporal view: \"what happens when...\". Not yet strictly validated field-by-field by schema.lua (only its id is checked for uniqueness) -- follow this shape anyway so the renderer (Phase 3) can rely on it.",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "steps"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^flow:[A-Za-z0-9_-]+$" },
+          "name": { "type": "string" },
+          "steps": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["seq", "component", "action"],
+              "properties": {
+                "seq": { "type": "integer" },
+                "component": { "type": "string", "description": "id of a component in this revision" },
+                "action": { "type": "string" },
+                "evidence": { "type": "array", "items": { "$ref": "#/definitions/evidence" } },
+                "claim_type": { "$ref": "#/definitions/claim_type" },
+                "confidence": { "$ref": "#/definitions/confidence" }
+              }
+            }
+          }
+        }
+      }
+    },
+
+    "data_lineage": {
+      "type": "array",
+      "description": "Named end-to-end data-transformation chain, e.g. \"RefundRequest lifecycle\": RequestDTO -> Command -> DomainModel -> ... Also not yet strictly validated field-by-field.",
+      "items": {
+        "type": "object",
+        "required": ["id", "name", "stages"],
+        "properties": {
+          "id": { "type": "string", "pattern": "^lineage:[A-Za-z0-9_-]+$" },
+          "name": { "type": "string" },
+          "stages": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": ["seq", "shape", "component"],
+              "properties": {
+                "seq": { "type": "integer" },
+                "shape": { "type": "string", "description": "the data's type/shape at this stage, e.g. \"RefundRequestDTO\"" },
+                "component": { "type": "string" },
+                "transformed_by": { "$ref": "#/definitions/evidence" },
+                "claim_type": { "$ref": "#/definitions/claim_type" },
+                "confidence": { "$ref": "#/definitions/confidence" }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+
+  "definitions": {
+    "claim_type": { "enum": ["OBSERVED", "INFERRED", "UNKNOWN"], "description": "OBSERVED = you read the code and it says this. INFERRED = you're pattern-matching/reasoning, not certain. UNKNOWN = you don't know and are flagging that. OBSERVED claims MUST cite at least one evidence entry -- the validator rejects an OBSERVED claim with none." },
+    "confidence": { "enum": ["high", "medium", "low"] },
+    "status": { "enum": ["proposed", "accepted", "challenged", "corrected", "unresolved"], "description": "proposed = you asserted it, engineer hasn't reviewed. Use \"proposed\" for everything you write -- the other four states are set by the engineer's corrections (or, for assumptions, default to \"unresolved\")." },
+
+    "evidence": {
+      "type": "object",
+      "required": ["file"],
+      "properties": {
+        "file": { "type": "string", "description": "path relative to the repo root" },
+        "line": { "type": "integer", "minimum": 1 },
+        "symbol": { "type": "string" }
+      }
+    },
+
+    "component": {
+      "type": "object",
+      "required": ["id", "name"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^component:[A-Za-z0-9_-]+$" },
+        "kind": { "enum": ["component", "boundary", "external"] },
+        "name": { "type": "string" },
+        "role": { "type": "string", "description": "one sentence: what this component is responsible for" },
+        "group": { "type": "string", "description": "id of a groups[] entry -- the architectural boundary this belongs to" },
+        "parent": { "type": "string", "description": "id of another component, for nesting hierarchy" },
+        "claim_type": { "$ref": "#/definitions/claim_type" },
+        "confidence": { "$ref": "#/definitions/confidence" },
+        "evidence": { "type": "array", "items": { "$ref": "#/definitions/evidence" } },
+        "status": { "$ref": "#/definitions/status", "default": "proposed" }
+      }
+    },
+
+    "relationship": {
+      "type": "object",
+      "required": ["id", "from", "to"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^rel:[A-Za-z0-9_-]+$" },
+        "from": { "type": "string", "description": "id of a component in this revision" },
+        "to": { "type": "string", "description": "id of a component in this revision" },
+        "kind": { "enum": ["calls", "depends_on", "publishes", "subscribes", "reads", "writes"] },
+        "data_shape": { "type": "string", "description": "the type/shape of data crossing this edge, e.g. \"IssueRefundCommand\" -- shown as the edge label" },
+        "claim_type": { "$ref": "#/definitions/claim_type" },
+        "confidence": { "$ref": "#/definitions/confidence" },
+        "evidence": { "type": "array", "items": { "$ref": "#/definitions/evidence" } },
+        "status": { "$ref": "#/definitions/status", "default": "proposed" }
+      }
+    },
+
+    "decision": {
+      "type": "object",
+      "required": ["id", "question", "options"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^decision:[A-Za-z0-9_-]+$" },
+        "question": { "type": "string" },
+        "options": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["option", "outcome"],
+            "properties": {
+              "option": { "type": "string" },
+              "outcome": { "enum": ["chosen", "rejected"] },
+              "reason": { "type": "string" },
+              "evidence": { "type": "array", "items": { "$ref": "#/definitions/evidence" } }
+            }
+          }
+        },
+        "claim_type": { "$ref": "#/definitions/claim_type" },
+        "confidence": { "$ref": "#/definitions/confidence" },
+        "status": { "$ref": "#/definitions/status", "default": "proposed" }
+      }
+    },
+
+    "assumption": {
+      "type": "object",
+      "required": ["id", "statement"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^assumption:[A-Za-z0-9_-]+$" },
+        "statement": { "type": "string" },
+        "claim_type": { "$ref": "#/definitions/claim_type", "default": "UNKNOWN" },
+        "confidence": { "$ref": "#/definitions/confidence", "default": "low" },
+        "evidence": { "type": "array", "items": { "$ref": "#/definitions/evidence" } },
+        "status": { "$ref": "#/definitions/status", "default": "unresolved" }
+      }
+    },
+
+    "correction": {
+      "type": "object",
+      "required": ["id", "target"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^correction:[0-9]{4}$" },
+        "target": { "type": "string", "description": "id of the entity this corrects" },
+        "target_field": { "type": "string" },
+        "kind": { "type": "string" },
+        "engineer_note": { "type": "string" },
+        "created_at": { "type": "string" },
+        "created_by": { "type": "string" },
+        "resolved": { "type": "boolean" },
+        "resolved_in_revision": { "type": ["string", "null"] }
+      }
+    }
+  }
+}

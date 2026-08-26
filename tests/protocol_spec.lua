@@ -1,0 +1,63 @@
+local protocol = require('walkthrough-nvim.server.protocol')
+
+local function spy_engine()
+  local calls = {}
+  local function record(name)
+    return function(...)
+      calls[#calls + 1] = { name = name, args = { ... } }
+    end
+  end
+  return {
+    calls = calls,
+    focus = record('focus'),
+    clear_focus = record('clear_focus'),
+    reveal = record('reveal'),
+  }
+end
+
+describe('walkthrough-nvim.server.protocol', function()
+  it('routes focus and reveal by nodeId', function()
+    local eng = spy_engine()
+    protocol.dispatch({ action = 'focus', nodeId = 'component:x' }, eng)
+    protocol.dispatch({ action = 'reveal', nodeId = 'component:x' }, eng)
+    assert.are.equal('focus', eng.calls[1].name)
+    assert.are.equal('component:x', eng.calls[1].args[1])
+    assert.are.equal('reveal', eng.calls[2].name)
+  end)
+
+  it('routes clearFocus with no params', function()
+    local eng = spy_engine()
+    protocol.dispatch({ action = 'clearFocus' }, eng)
+    assert.are.equal('clear_focus', eng.calls[1].name)
+    assert.are.equal(0, #eng.calls[1].args)
+  end)
+
+  it('errors on an unknown action without touching the engine', function()
+    local eng = spy_engine()
+    local res = protocol.dispatch({ action = 'launchMissiles' }, eng)
+    assert.are.equal('error', res.status)
+    assert.is_truthy(res.message:find('unknown'))
+    assert.are.equal(0, #eng.calls)
+  end)
+
+  it('errors when a required parameter is missing', function()
+    local eng = spy_engine()
+    local res = protocol.dispatch({ action = 'focus' }, eng)
+    assert.are.equal('error', res.status)
+    assert.are.equal(0, #eng.calls)
+  end)
+
+  it('decodes a raw JSON string and routes it', function()
+    local eng = spy_engine()
+    local res = protocol.handle('{"action":"reveal","nodeId":"component:x"}', eng)
+    assert.are.equal('ok', res.status)
+    assert.are.equal('reveal', eng.calls[1].name)
+  end)
+
+  it('errors on malformed JSON', function()
+    local eng = spy_engine()
+    local res = protocol.handle('{not json', eng)
+    assert.are.equal('error', res.status)
+    assert.are.equal(0, #eng.calls)
+  end)
+end)

@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>walkthrough</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body data-theme="auto">
+    <header id="toolbar">
+      <span class="brand">walkthrough</span>
+      <span id="wt-title" class="wt-title"></span>
+      <span id="legend" class="legend"></span>
+      <button id="fit" title="Fit diagram to view">Fit</button>
+      <span id="status" class="status" aria-live="polite"></span>
+    </header>
+    <main id="cy"></main>
+    <aside id="detail" aria-live="polite"></aside>
+
+    <script src="/vendor/cytoscape.min.js"></script>
+    <script src="/vendor/dagre.min.js"></script>
+    <script src="/vendor/cytoscape-dagre.min.js"></script>
+    <script src="/renderer_component.js"></script>
+    <script src="/detail_panel.js"></script>
+    <script src="/app.js"></script>
+  </body>
+</html>
