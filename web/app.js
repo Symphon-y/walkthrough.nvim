@@ -73,6 +73,20 @@
     });
   }
 
+  /* Shared by the architecture graph's node click and every secondary
+   * view's entity click -- same three effects everywhere a component is
+   * clicked: jump Neovim to it, highlight it in the (possibly hidden)
+   * architecture graph, and show its detail panel. */
+  function focusAndReveal(id) {
+    send('reveal', { nodeId: id });
+    send('focus', { nodeId: id });
+    showEntity(id);
+  }
+
+  function revealEvidence(file, line) {
+    send('revealAt', { file: file, line: line || 1 });
+  }
+
   function connect() {
     var es = new EventSource(withToken('/events'));
     es.addEventListener('focus:update', function (e) {
@@ -87,6 +101,9 @@
         var d = JSON.parse(e.data);
         model = d.model;
         view.updateEntities(model);
+        secondaryViews.sequence.render(model);
+        secondaryViews.lineage.render(model);
+        secondaryViews.decisions.render(model);
         if (focusedId) showEntity(focusedId); // refresh the open panel with the new status
       } catch (_) {
         /* ignore malformed/late event */
@@ -105,14 +122,38 @@
     };
   }
 
+  var VIEWS = ['architecture', 'sequence', 'lineage', 'decisions'];
+  var secondaryViews = {};
+  var activeView = 'architecture';
+
+  function switchView(name) {
+    activeView = name;
+    VIEWS.forEach(function (v) {
+      var isActive = v === name;
+      var container = v === 'architecture' ? document.getElementById('cy') : document.getElementById('view-' + v);
+      container.hidden = !isActive;
+      var tab = document.querySelector('.view-tab[data-view="' + v + '"]');
+      if (tab) tab.classList.toggle('is-active', isActive);
+    });
+    document.getElementById('fit').hidden = name !== 'architecture';
+    if (name === 'architecture') view.fit();
+  }
+
   function init() {
+    var entityCtx = { onEntityClick: focusAndReveal, onEvidenceClick: revealEvidence };
+    secondaryViews.sequence = window.createSequenceView(document.getElementById('view-sequence'), entityCtx);
+    secondaryViews.lineage = window.createLineageView(document.getElementById('view-lineage'), entityCtx);
+    secondaryViews.decisions = window.createDecisionView(document.getElementById('view-decisions'), entityCtx);
+
+    document.querySelectorAll('.view-tab').forEach(function (tab) {
+      tab.addEventListener('click', function () {
+        switchView(tab.getAttribute('data-view'));
+      });
+    });
+
     view = window.createComponentRenderer({
       container: document.getElementById('cy'),
-      onNodeClick: function (id) {
-        send('reveal', { nodeId: id });
-        send('focus', { nodeId: id });
-        showEntity(id);
-      },
+      onNodeClick: focusAndReveal,
       onClearFocus: function () {
         send('clearFocus');
         focusedId = null;
@@ -144,6 +185,10 @@
         titleEl.appendChild(statusSpan);
         view.ingest(model);
         view.applyFocus(snapshot.focus);
+        secondaryViews.sequence.render(model);
+        secondaryViews.lineage.render(model);
+        secondaryViews.decisions.render(model);
+        switchView(activeView);
         setTimeout(function () {
           view.fit();
         }, 250);

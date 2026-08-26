@@ -10,7 +10,13 @@
     <header id="toolbar">
       <span class="brand">walkthrough</span>
       <span id="wt-title" class="wt-title"></span>
-      <span class="legend">
+      <nav id="view-tabs" class="view-tabs">
+        <button class="view-tab is-active" data-view="architecture">Architecture</button>
+        <button class="view-tab" data-view="sequence">Sequence</button>
+        <button class="view-tab" data-view="lineage">Lineage</button>
+        <button class="view-tab" data-view="decisions">Decisions</button>
+      </nav>
+      <span id="legend" class="legend">
         <span class="item"><span class="swatch solid"></span>Observed</span>
         <span class="item"><span class="swatch wash"></span>Inferred</span>
         <span class="item"><span class="swatch outline"></span>Unknown</span>
@@ -22,12 +28,16 @@
       </span>
     </header>
     <main id="cy"></main>
+    <main id="view-sequence" class="secondary-view" hidden></main>
+    <main id="view-lineage" class="secondary-view" hidden></main>
+    <main id="view-decisions" class="secondary-view" hidden></main>
     <aside id="detail" aria-live="polite"></aside>
 
     <script src="/vendor/cytoscape.min.js"></script>
     <script src="/vendor/dagre.min.js"></script>
     <script src="/vendor/cytoscape-dagre.min.js"></script>
     <script src="/renderer_component.js"></script>
+    <script src="/renderer_views.js"></script>
     <script src="/detail_panel.js"></script>
     <script src="/app.js"></script>
   </body>

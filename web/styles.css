@@ -97,6 +97,35 @@ body {
   color: var(--muted);
 }
 
+.view-tabs {
+  display: flex;
+  gap: 0.2rem;
+  margin-left: 0.5rem;
+  padding-left: 1rem;
+  border-left: 1px solid var(--hairline);
+}
+
+.view-tab {
+  padding: 0.3rem 0.7rem;
+  border: none;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--text-2);
+  font-size: 0.82rem;
+  cursor: pointer;
+}
+
+.view-tab:hover {
+  color: var(--text);
+  background: var(--surface-2);
+}
+
+.view-tab.is-active {
+  color: var(--text);
+  background: var(--surface-2);
+  font-weight: 600;
+}
+
 .legend {
   display: flex;
   align-items: center;
@@ -177,6 +206,211 @@ body {
   background: var(--page);
 }
 
+/* Secondary views: sequence / lineage / decisions -- scrollable card
+ * columns, shown one at a time in place of #cy. */
+.secondary-view {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  background: var(--page);
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  align-items: center;
+}
+
+.secondary-view[hidden] {
+  display: none;
+}
+
+.v-empty {
+  color: var(--muted);
+  font-size: 0.9rem;
+  margin-top: 2rem;
+}
+
+.v-card {
+  width: 100%;
+  max-width: 42rem;
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  border-radius: 12px;
+  padding: 1.1rem 1.3rem;
+}
+
+.v-card-title {
+  margin: 0 0 0.7rem;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.v-badges {
+  display: inline-flex;
+  gap: 0.35rem;
+  margin-left: 0.6rem;
+  vertical-align: middle;
+}
+
+.v-evidence-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-top: 0.4rem;
+}
+
+.v-evidence-link {
+  align-self: flex-start;
+  border: none;
+  background: var(--surface-2);
+  color: var(--text-2);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.76rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.v-evidence-link:hover {
+  color: var(--accent);
+  background: var(--surface-2);
+  outline: 1px solid var(--accent);
+}
+
+/* Sequence: a vertical timeline of numbered steps. */
+.v-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  position: relative;
+}
+
+.v-step {
+  display: flex;
+  gap: 0.8rem;
+  padding-bottom: 1.1rem;
+  position: relative;
+}
+
+.v-step:not(:last-child)::before {
+  content: '';
+  position: absolute;
+  left: 0.65rem;
+  top: 1.6rem;
+  bottom: 0;
+  width: 1px;
+  background: var(--hairline);
+}
+
+.v-step-marker {
+  flex: none;
+  width: 1.3rem;
+  height: 1.3rem;
+  border-radius: 50%;
+  background: var(--surface-2);
+  border: 1px solid var(--hairline);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text-2);
+}
+
+.v-step-body {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.v-step-head {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+}
+
+.v-step-component,
+.v-stage-component {
+  border: none;
+  background: transparent;
+  color: var(--accent);
+  font-weight: 600;
+  font-size: 0.88rem;
+  padding: 0;
+  cursor: pointer;
+}
+
+.v-step-component:hover,
+.v-stage-component:hover {
+  text-decoration: underline;
+}
+
+.v-step-action {
+  color: var(--text-2);
+  font-size: 0.85rem;
+  margin-top: 0.15rem;
+}
+
+/* Lineage: a horizontal, wrapping chain of stage chips. */
+.v-chain {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.v-chain-arrow {
+  color: var(--muted);
+  font-size: 1.1rem;
+}
+
+.v-stage {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.3rem;
+  padding: 0.6rem 0.8rem;
+  border-radius: 10px;
+  background: var(--surface-2);
+  border: 1px solid var(--hairline);
+  min-width: 9rem;
+}
+
+.v-stage-shape {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+/* Decisions: option rows, chosen vs. rejected. */
+.v-option {
+  padding: 0.6rem 0;
+  border-top: 1px solid var(--hairline);
+}
+
+.v-option-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.v-option-rejected .v-option-text {
+  color: var(--muted);
+  text-decoration: line-through;
+  text-decoration-color: var(--hairline);
+}
+
+.v-option-text {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.v-option-reason {
+  color: var(--text-2);
+  font-size: 0.85rem;
+  margin-top: 0.25rem;
+}
+
 /* Node/entity detail panel, shown on click. */
 #detail {
   position: absolute;
@@ -218,7 +452,10 @@ body {
   margin-top: 0.15rem;
 }
 
-#detail .badge {
+/* Badge classes are used both in #detail and in the secondary views'
+ * .v-card elements -- kept unscoped (not #detail .badge) so both share
+ * one definition. */
+.badge {
   font-size: 0.68rem;
   font-weight: 600;
   text-transform: uppercase;
@@ -226,45 +463,46 @@ body {
   padding: 0.2rem 0.55rem;
   border-radius: 999px;
   line-height: 1.4;
+  white-space: nowrap;
 }
 
-#detail .badge.claim-observed {
+.badge.claim-observed {
   background: var(--claim-solid);
   color: #ffffff;
 }
 
-#detail .badge.claim-inferred {
+.badge.claim-inferred {
   background: var(--claim-wash);
   color: var(--claim-solid);
   border: 1px solid var(--claim-wash-border);
 }
 
-#detail .badge.claim-unknown {
+.badge.claim-unknown {
   background: transparent;
   color: var(--muted);
   border: 1px dashed var(--muted);
 }
 
-#detail .badge.confidence {
+.badge.confidence {
   background: var(--surface-2);
   color: var(--text-2);
   border: 1px solid var(--hairline);
 }
 
-#detail .badge.status-accepted {
+.badge.status-accepted {
   background: var(--status-good);
   color: #ffffff;
 }
-#detail .badge.status-challenged {
+.badge.status-challenged {
   background: var(--status-critical);
   color: #ffffff;
 }
-#detail .badge.status-corrected {
+.badge.status-corrected {
   background: var(--status-warning);
   color: #241a00;
 }
-#detail .badge.status-proposed,
-#detail .badge.status-unresolved {
+.badge.status-proposed,
+.badge.status-unresolved {
   background: transparent;
   color: var(--muted);
   border: 1px solid var(--status-neutral);

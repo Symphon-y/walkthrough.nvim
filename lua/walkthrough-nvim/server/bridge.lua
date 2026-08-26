@@ -61,6 +61,15 @@ function M.reveal(node_id)
   reveal.reveal(state.session.model, node_id)
 end
 
+--- Jump the editor directly to a file/line -- for evidence with no entity
+--- id of its own (a data_lineage stage, a decision option).
+function M.reveal_at(file, line)
+  if not state.active() then
+    return
+  end
+  reveal.reveal_at(file, line)
+end
+
 --- Push the whole current model to every connected browser -- used after
 --- a correction changes an entity's status, since that's a data change,
 --- not just a view-state change (focus:update is for the latter).

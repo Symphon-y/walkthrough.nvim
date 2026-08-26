@@ -21,6 +21,7 @@ local ROUTES = {
   focus = { method = 'focus', params = { 'nodeId' } },
   clearFocus = { method = 'clear_focus', params = {} },
   reveal = { method = 'reveal', params = { 'nodeId' } },
+  revealAt = { method = 'reveal_at', params = { 'file', 'line' } },
   accept = { method = 'accept', params = { 'nodeId' } },
   challenge = { method = 'challenge', params = { 'nodeId' } },
   correct = { method = 'correct', params = { 'nodeId', 'note' } },
