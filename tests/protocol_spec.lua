@@ -12,6 +12,7 @@ local function spy_engine()
     focus = record('focus'),
     clear_focus = record('clear_focus'),
     reveal = record('reveal'),
+    reveal_at = record('reveal_at'),
     accept = record('accept'),
     challenge = record('challenge'),
     correct = record('correct'),
@@ -33,6 +34,13 @@ describe('walkthrough-nvim.server.protocol', function()
     protocol.dispatch({ action = 'clearFocus' }, eng)
     assert.are.equal('clear_focus', eng.calls[1].name)
     assert.are.equal(0, #eng.calls[1].args)
+  end)
+
+  it('routes revealAt by file+line', function()
+    local eng = spy_engine()
+    protocol.dispatch({ action = 'revealAt', file = 'src/x.cs', line = 42 }, eng)
+    assert.are.equal('reveal_at', eng.calls[1].name)
+    assert.are.same({ 'src/x.cs', 42 }, eng.calls[1].args)
   end)
 
   it('routes accept/challenge by nodeId and correct by nodeId+note', function()
