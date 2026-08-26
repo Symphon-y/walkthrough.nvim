@@ -26,6 +26,7 @@ function M.snapshot()
   return {
     model = state.session.model,
     focus = focus.overlay(state.session.model, state.session.focus_path or {}),
+    diff = state.session.diff, -- present only after :WalkthroughDiff
   }
 end
 

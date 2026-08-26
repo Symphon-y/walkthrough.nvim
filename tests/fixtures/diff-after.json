@@ -81,6 +81,7 @@
       ],
       "claim_type": "OBSERVED",
       "confidence": "high",
+      "evidence": [ { "file": "src/refunds/RefundOrchestrator.cs", "line": 22 } ],
       "status": "accepted"
     },
     {
@@ -91,6 +92,7 @@
       ],
       "claim_type": "OBSERVED",
       "confidence": "high",
+      "evidence": [ { "file": "src/refunds/RefundOrchestrator.cs", "line": 35 } ],
       "status": "accepted"
     }
   ]

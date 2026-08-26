@@ -15,6 +15,7 @@
         <button class="view-tab" data-view="sequence">Sequence</button>
         <button class="view-tab" data-view="lineage">Lineage</button>
         <button class="view-tab" data-view="decisions">Decisions</button>
+        <button class="view-tab" data-view="diff" id="diff-tab" hidden>Before → After</button>
       </nav>
       <span id="legend" class="legend">
         <span class="item"><span class="swatch solid"></span>Observed</span>
@@ -31,6 +32,7 @@
     <main id="view-sequence" class="secondary-view" hidden></main>
     <main id="view-lineage" class="secondary-view" hidden></main>
     <main id="view-decisions" class="secondary-view" hidden></main>
+    <main id="view-diff" class="secondary-view" hidden></main>
     <aside id="detail" aria-live="polite"></aside>
 
     <script src="/vendor/cytoscape.min.js"></script>
@@ -38,6 +40,7 @@
     <script src="/vendor/cytoscape-dagre.min.js"></script>
     <script src="/renderer_component.js"></script>
     <script src="/renderer_views.js"></script>
+    <script src="/renderer_delta.js"></script>
     <script src="/detail_panel.js"></script>
     <script src="/app.js"></script>
   </body>

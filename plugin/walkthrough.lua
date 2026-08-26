@@ -28,3 +28,7 @@ vim.api.nvim_create_user_command('WalkthroughLoad', function(cmd_opts)
   local id, revision_id = cmd_opts.args:match('^(%S+)%s+(%S+)$')
   require('walkthrough-nvim').load(id, revision_id)
 end, { nargs = '?', desc = 'Open a specific revision: :WalkthroughLoad {walkthrough_id} {revision_id}' })
+
+vim.api.nvim_create_user_command('WalkthroughDiff', function(cmd_opts)
+  require('walkthrough-nvim').diff(cmd_opts.args)
+end, { nargs = '?', desc = 'Open the implementation revision with a before/after diff attached' })

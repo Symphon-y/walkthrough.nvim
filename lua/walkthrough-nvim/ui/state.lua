@@ -10,11 +10,17 @@ M.session = nil
 --- it the active one. Any previous session's server is left running --
 --- callers that want a clean switch should call M.session.server:stop()
 --- first (init.lua's M.open() does this).
-function M.new(root, walkthrough_id, model)
+--
+-- `diff` (optional): { before_id, after_id, result } from model/diff.lua,
+-- set only by :WalkthroughDiff -- `model` is still the after-model, so
+-- every normal view (architecture/sequence/lineage/decisions) renders it
+-- as usual; `diff` additionally unlocks the before/after delta view.
+function M.new(root, walkthrough_id, model, diff)
   M.session = {
     root = root,
     walkthrough_id = walkthrough_id,
     model = model,
+    diff = diff,
     focus_path = {}, -- breadcrumb path for model/focus.lua's overlay
     server = nil, -- set once server.start() succeeds
   }

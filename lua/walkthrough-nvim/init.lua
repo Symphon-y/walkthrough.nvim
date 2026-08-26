@@ -45,9 +45,10 @@ end
 --- Load `revision_id` of `walkthrough_id`: starts the local server, points
 --- a browser at its component/architecture diagram, and wires
 --- jump-to-source back into this Neovim instance. Shared by M.open
---- (resolves the current exploration revision) and M.load (an explicit
---- revision, e.g. from :WalkthroughHistory).
-local function open_revision(root, walkthrough_id, revision_id)
+--- (resolves the current exploration revision), M.load (an explicit
+--- revision, e.g. from :WalkthroughHistory), and M.diff (opens the
+--- implementation revision with a before/after diff attached).
+local function open_revision(root, walkthrough_id, revision_id, diff)
   local io_mod = require('walkthrough-nvim.persist.io')
   local state = require('walkthrough-nvim.ui.state')
 
@@ -59,7 +60,7 @@ local function open_revision(root, walkthrough_id, revision_id)
 
   state.clear() -- stop any previously open session's server first
 
-  state.new(root, walkthrough_id, model)
+  state.new(root, walkthrough_id, model, diff)
   local server = require('walkthrough-nvim.server.server').start({
     engine = require('walkthrough-nvim.server.bridge'),
   })
@@ -145,6 +146,52 @@ function M.history(walkthrough_id)
       M.load(walkthrough_id, choice.id)
     end
   end)
+end
+
+--- Open the implementation revision with a visual before/after diff
+--- against the current exploration revision attached.
+function M.diff(walkthrough_id)
+  local root = require('walkthrough-nvim.persist.root').find()
+
+  if not walkthrough_id or walkthrough_id == '' then
+    no_id_notice(root)
+    return
+  end
+
+  local io_mod = require('walkthrough-nvim.persist.io')
+  local ok, manifest = pcall(io_mod.read_manifest, root, walkthrough_id)
+  if not ok then
+    vim.notify('walkthrough: ' .. tostring(manifest), vim.log.levels.ERROR)
+    return
+  end
+
+  local before_id = manifest.current and manifest.current.exploration
+  local after_id = manifest.current and manifest.current.implementation
+  if not before_id or not after_id then
+    vim.notify(
+      'walkthrough: need both an exploration and an implementation revision for "'
+        .. walkthrough_id
+        .. '" -- run walkthrough-explore and walkthrough-asbuilt first',
+      vim.log.levels.WARN
+    )
+    return
+  end
+
+  local before_ok, before_model = io_mod.read_revision(root, walkthrough_id, before_id)
+  if not before_ok then
+    vim.notify('walkthrough: ' .. tostring(before_model), vim.log.levels.ERROR)
+    return
+  end
+  local after_ok, after_model = io_mod.read_revision(root, walkthrough_id, after_id)
+  if not after_ok then
+    vim.notify('walkthrough: ' .. tostring(after_model), vim.log.levels.ERROR)
+    return
+  end
+
+  local diff_mod = require('walkthrough-nvim.model.diff')
+  local result = diff_mod.diff(before_model, after_model)
+
+  open_revision(root, walkthrough_id, after_id, { before_id = before_id, after_id = after_id, result = result })
 end
 
 --- Close the active walkthrough session, stopping its server.

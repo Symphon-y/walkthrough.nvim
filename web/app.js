@@ -122,7 +122,7 @@
     };
   }
 
-  var VIEWS = ['architecture', 'sequence', 'lineage', 'decisions'];
+  var VIEWS = ['architecture', 'sequence', 'lineage', 'decisions', 'diff'];
   var secondaryViews = {};
   var activeView = 'architecture';
 
@@ -144,6 +144,7 @@
     secondaryViews.sequence = window.createSequenceView(document.getElementById('view-sequence'), entityCtx);
     secondaryViews.lineage = window.createLineageView(document.getElementById('view-lineage'), entityCtx);
     secondaryViews.decisions = window.createDecisionView(document.getElementById('view-decisions'), entityCtx);
+    secondaryViews.diff = window.createDeltaView(document.getElementById('view-diff'), entityCtx);
 
     document.querySelectorAll('.view-tab').forEach(function (tab) {
       tab.addEventListener('click', function () {
@@ -188,7 +189,13 @@
         secondaryViews.sequence.render(model);
         secondaryViews.lineage.render(model);
         secondaryViews.decisions.render(model);
-        switchView(activeView);
+        if (snapshot.diff) {
+          document.getElementById('diff-tab').hidden = false;
+          secondaryViews.diff.render(snapshot.diff.result);
+          switchView('diff');
+        } else {
+          switchView(activeView);
+        }
         setTimeout(function () {
           view.fit();
         }, 250);
