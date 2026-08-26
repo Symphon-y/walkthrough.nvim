@@ -10,9 +10,16 @@
     <header id="toolbar">
       <span class="brand">walkthrough</span>
       <span id="wt-title" class="wt-title"></span>
-      <span id="legend" class="legend"></span>
+      <span class="legend">
+        <span class="item"><span class="swatch solid"></span>Observed</span>
+        <span class="item"><span class="swatch wash"></span>Inferred</span>
+        <span class="item"><span class="swatch outline"></span>Unknown</span>
+      </span>
       <button id="fit" title="Fit diagram to view">Fit</button>
-      <span id="status" class="status" aria-live="polite"></span>
+      <span id="status" class="status" aria-live="polite">
+        <span class="status-dot"></span>
+        <span class="status-label">connecting…</span>
+      </span>
     </header>
     <main id="cy"></main>
     <aside id="detail" aria-live="polite"></aside>

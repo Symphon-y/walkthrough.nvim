@@ -7,11 +7,24 @@
  * once in full rather than incrementally merged in as LSP expansion
  * discovers more nodes -- a walkthrough is small and curated up front.
  *
+ * Encoding (see dataviz skill / web/styles.css for the palette source):
+ *   claim_type -> fill treatment: OBSERVED = solid, INFERRED = wash,
+ *     UNKNOWN = outline only. Self-explanatory without reading a legend
+ *     twice -- "how much is actually here" reads as "how much fill is there."
+ *   status -> a thin ring (the fixed status palette), never the fill --
+ *     two encodings on two different visual channels so they don't fight.
+ *   confidence -> border style (dashed at low confidence) -- secondary,
+ *     minor signal only.
+ *
  * ctx: { container, onNodeClick(id), onClearFocus() }
  * returns: { ingest(model), applyFocus(overlay), fit }
  */
 window.createComponentRenderer = function (ctx) {
   'use strict';
+
+  function cssVar(name) {
+    return getComputedStyle(document.body).getPropertyValue(name).trim();
+  }
 
   var cy = cytoscape({
     container: ctx.container,
@@ -21,90 +34,119 @@ window.createComponentRenderer = function (ctx) {
         selector: 'node.group',
         style: {
           shape: 'round-rectangle',
-          'background-color': 'var(--panel)',
+          'corner-radius': 14,
+          'background-color': function () {
+            return cssVar('--surface-2');
+          },
           'background-opacity': 0.6,
           'border-width': 1,
-          'border-color': 'var(--border)',
-          'border-style': 'dashed',
+          'border-color': function () {
+            return cssVar('--hairline');
+          },
           label: 'data(label)',
-          color: 'var(--muted)',
-          'font-size': 11,
+          color: function () {
+            return cssVar('--muted');
+          },
+          'font-size': 10,
+          'font-weight': 600,
+          'text-transform': 'uppercase',
           'text-valign': 'top',
-          'text-halign': 'center',
-          'text-margin-y': 6,
-          padding: '18px',
+          'text-halign': 'left',
+          'text-margin-x': 4,
+          'text-margin-y': 10,
+          'text-background-color': function () {
+            return cssVar('--page');
+          },
+          'text-background-opacity': 1,
+          'text-background-padding': 3,
+          padding: '30px',
         },
       },
       {
         selector: 'node.entity',
         style: {
           shape: function (ele) {
-            return ele.data('kind') === 'external' ? 'round-rectangle' : 'rectangle';
+            return ele.data('kind') === 'external' ? 'round-rectangle' : 'round-rectangle';
           },
+          'corner-radius': 8,
+          width: 'label',
+          height: 34,
+          padding: '14px',
+          'text-max-width': '160px',
+          'text-wrap': 'ellipsis',
+
           'background-color': function (ele) {
-            return claimColor(ele.data('claim_type'));
+            var claim = ele.data('claim_type');
+            return claim === 'UNKNOWN' ? 'transparent' : cssVar('--claim-solid');
           },
           'background-opacity': function (ele) {
-            return confidenceOpacity(ele.data('confidence'));
+            var claim = ele.data('claim_type');
+            if (claim === 'OBSERVED') return 1;
+            if (claim === 'INFERRED') return 0.16;
+            return 0; // UNKNOWN: outline only
           },
+
           label: 'data(label)',
-          color: 'var(--text)',
-          'font-size': 11,
-          'text-valign': 'bottom',
-          'text-margin-y': 6,
-          width: 'label',
-          height: 26,
-          padding: '8px',
-          'border-width': 2,
+          color: function (ele) {
+            return ele.data('claim_type') === 'OBSERVED' ? '#ffffff' : cssVar('--text');
+          },
+          'font-size': 12,
+          'font-weight': 500,
+          'text-valign': 'center',
+          'text-halign': 'center',
+
+          'border-width': function (ele) {
+            return ele.data('status') && ele.data('status') !== 'proposed' && ele.data('status') !== 'unresolved' ? 2.5 : 1.5;
+          },
           'border-color': function (ele) {
-            return statusColor(ele.data('status'));
+            return statusColor(ele.data('status'), ele.data('claim_type'));
           },
           'border-style': function (ele) {
             return ele.data('confidence') === 'low' ? 'dashed' : 'solid';
           },
+          'border-opacity': 1,
         },
       },
       {
         selector: 'edge',
         style: {
           width: 1.5,
-          'line-color': '#94a3b8',
-          'target-arrow-color': '#94a3b8',
+          'line-color': function () {
+            return cssVar('--border');
+          },
+          'target-arrow-color': function () {
+            return cssVar('--border');
+          },
           'target-arrow-shape': 'triangle',
+          'arrow-scale': 0.85,
           'curve-style': 'bezier',
           label: 'data(label)',
-          'font-size': 9,
-          color: '#94a3b8',
-          'text-rotation': 'autorotate',
-          'text-background-color': 'var(--bg)',
-          'text-background-opacity': 0.85,
-          'text-background-padding': 2,
+          'font-size': 10,
+          color: function () {
+            return cssVar('--text-2');
+          },
+          'text-rotation': 0, // never rotate: a rotated label through a compound stack is unreadable
+          'text-background-color': function () {
+            return cssVar('--page');
+          },
+          'text-background-opacity': 0.92,
+          'text-background-padding': 3,
         },
       },
-      { selector: '.unfocused', style: { opacity: 0.15 } },
-      { selector: 'node.onfocus', style: { 'border-width': 4 } },
+      // Dimmed floor kept high enough to still read shape + label -- 0.15
+      // makes elements disappear entirely against a dark surface.
+      { selector: '.unfocused', style: { opacity: 0.35 } },
+      { selector: 'node.onfocus', style: { 'border-width': 3 } },
     ],
   });
 
-  function claimColor(claim_type) {
-    if (claim_type === 'OBSERVED') return getVar('--observed');
-    if (claim_type === 'INFERRED') return getVar('--inferred');
-    return getVar('--unknown');
-  }
-
-  function statusColor(status) {
-    var key = '--status-' + (status || 'proposed');
-    return getVar(key) || getVar('--status-proposed');
-  }
-
-  function confidenceOpacity(confidence) {
-    if (confidence === 'high') return 1;
-    if (confidence === 'medium') return 0.75;
-    return 0.5;
-  }
-
-  function getVar(name) {
-    return getComputedStyle(document.body).getPropertyValue(name).trim();
+  function statusColor(status, claim_type) {
+    if (status === 'accepted') return cssVar('--status-good');
+    if (status === 'challenged') return cssVar('--status-critical');
+    if (status === 'corrected') return cssVar('--status-warning');
+    // proposed / unresolved: no verdict yet -- a quiet neutral ring, not a
+    // status color (those are reserved for an actual reviewed state).
+    return claim_type === 'UNKNOWN' ? cssVar('--muted') : cssVar('--status-neutral');
   }
 
   cy.on('tap', 'node.entity', function (evt) {
@@ -117,7 +159,7 @@ window.createComponentRenderer = function (ctx) {
   });
 
   function relayout() {
-    cy.layout({ name: 'dagre', rankDir: 'TB', nodeSep: 30, rankSep: 60, animate: true, animationDuration: 200 }).run();
+    cy.layout({ name: 'dagre', rankDir: 'TB', nodeSep: 55, rankSep: 90, animate: true, animationDuration: 200 }).run();
   }
 
   /* Build the full element set from a walkthrough model. Called once on
@@ -178,7 +220,7 @@ window.createComponentRenderer = function (ctx) {
   }
 
   function fit() {
-    cy.fit(undefined, 40);
+    cy.fit(undefined, 50);
   }
 
   return { ingest: ingest, applyFocus: applyFocus, fit: fit };

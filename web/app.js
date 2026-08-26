@@ -16,8 +16,10 @@
     return path + (path.indexOf('?') === -1 ? '?' : '&') + 'token=' + encodeURIComponent(token);
   }
 
-  function setStatus(text) {
-    document.getElementById('status').textContent = text;
+  function setStatus(text, connected) {
+    var el = document.getElementById('status');
+    el.querySelector('.status-label').textContent = text;
+    el.classList.toggle('is-connected', !!connected);
   }
 
   function send(action, data) {
@@ -44,6 +46,13 @@
     return null;
   }
 
+  function sep() {
+    var s = document.createElement('span');
+    s.className = 'sep';
+    s.textContent = '·';
+    return s;
+  }
+
   var model = null;
   var view = null;
   var detail = document.getElementById('detail');
@@ -60,37 +69,17 @@
     es.addEventListener('status', function (e) {
       try {
         var d = JSON.parse(e.data);
-        setStatus(d.connected ? 'connected' : d.message || '');
+        setStatus(d.connected ? 'connected' : d.message || '', d.connected);
       } catch (_) {
-        setStatus('connected');
+        setStatus('connected', true);
       }
     });
     es.onerror = function () {
-      setStatus('disconnected');
+      setStatus('disconnected', false);
     };
   }
 
-  function renderLegend() {
-    var legend = document.getElementById('legend');
-    var items = [
-      ['--observed', 'Observed'],
-      ['--inferred', 'Inferred'],
-      ['--unknown', 'Unknown'],
-    ];
-    items.forEach(function (pair) {
-      var span = document.createElement('span');
-      var dot = document.createElement('span');
-      dot.className = 'dot';
-      dot.style.background = getComputedStyle(document.body).getPropertyValue(pair[0]).trim();
-      span.appendChild(dot);
-      span.appendChild(document.createTextNode(pair[1]));
-      legend.appendChild(span);
-    });
-  }
-
   function init() {
-    renderLegend();
-
     view = window.createComponentRenderer({
       container: document.getElementById('cy'),
       onNodeClick: function (id) {
@@ -116,8 +105,16 @@
       })
       .then(function (snapshot) {
         model = snapshot.model;
-        document.getElementById('wt-title').textContent =
-          model.walkthrough_id + '  ·  ' + model.revision_id + '  ·  ' + model.status;
+        var titleEl = document.getElementById('wt-title');
+        titleEl.innerHTML = '';
+        titleEl.appendChild(document.createTextNode(model.walkthrough_id));
+        titleEl.appendChild(sep());
+        titleEl.appendChild(document.createTextNode(model.revision_id));
+        titleEl.appendChild(sep());
+        var statusSpan = document.createElement('span');
+        statusSpan.className = 'wt-status';
+        statusSpan.textContent = model.status;
+        titleEl.appendChild(statusSpan);
         view.ingest(model);
         view.applyFocus(snapshot.focus);
         setTimeout(function () {

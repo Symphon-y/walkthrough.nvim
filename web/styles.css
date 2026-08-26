@@ -1,34 +1,46 @@
+/* Palette sourced verbatim from the dataviz skill's reference instance
+ * (references/palette.md) -- chrome/ink roles, the ordinal blue ramp
+ * (claim_type: solid = observed, wash = inferred, outline = unknown), and
+ * the fixed status palette (never themed) for review state. */
 :root {
-  --bg: #ffffff;
-  --panel: #f3f4f6;
-  --border: #d1d5db;
-  --text: #1f2937;
-  --muted: #6b7280;
-  --accent: #2563eb;
+  --page: #f9f9f7;
+  --surface: #fcfcfb;
+  --surface-2: #f3f2ee;
+  --border: #c3c2b7;
+  --hairline: rgba(11, 11, 11, 0.1);
+  --text: #0b0b0b;
+  --text-2: #52514e;
+  --muted: #898781;
+  --accent: #2a78d6;
 
-  --observed: #2563eb;
-  --inferred: #d97706;
-  --unknown: #6b7280;
+  --claim-solid: #256abf; /* OBSERVED */
+  --claim-wash: rgba(37, 106, 191, 0.16);
+  --claim-wash-border: rgba(37, 106, 191, 0.55);
 
-  --status-accepted: #16a34a;
-  --status-challenged: #dc2626;
-  --status-corrected: #7c3aed;
-  --status-proposed: #9ca3af;
-  --status-unresolved: #9ca3af;
+  --status-good: #0ca30c;
+  --status-warning: #fab219;
+  --status-serious: #ec835a;
+  --status-critical: #d03b3b;
+  --status-neutral: rgba(11, 11, 11, 0.22);
 }
 
 @media (prefers-color-scheme: dark) {
   body[data-theme='auto'] {
-    --bg: #0f172a;
-    --panel: #1e293b;
-    --border: #334155;
-    --text: #e2e8f0;
-    --muted: #94a3b8;
-    --accent: #60a5fa;
+    --page: #0d0d0d;
+    --surface: #1a1a19;
+    --surface-2: #232322;
+    --border: #383835;
+    --hairline: rgba(255, 255, 255, 0.1);
+    --text: #ffffff;
+    --text-2: #c3c2b7;
+    --muted: #898781;
+    --accent: #3987e5;
 
-    --observed: #60a5fa;
-    --inferred: #fbbf24;
-    --unknown: #94a3b8;
+    --claim-solid: #3987e5;
+    --claim-wash: rgba(57, 135, 229, 0.2);
+    --claim-wash-border: rgba(57, 135, 229, 0.6);
+
+    --status-neutral: rgba(255, 255, 255, 0.22);
   }
 }
 
@@ -40,9 +52,9 @@ html,
 body {
   margin: 0;
   height: 100%;
-  font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
   color: var(--text);
-  background: var(--bg);
+  background: var(--page);
 }
 
 body {
@@ -53,45 +65,84 @@ body {
 #toolbar {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  padding: 0.4rem 0.75rem;
-  background: var(--panel);
-  border-bottom: 1px solid var(--border);
+  gap: 0.9rem;
+  padding: 0.65rem 1.1rem;
+  background: var(--surface);
+  border-bottom: 1px solid var(--hairline);
 }
 
 .brand {
   font-weight: 700;
+  font-size: 0.95rem;
   letter-spacing: 0.02em;
 }
 
 .wt-title {
-  color: var(--muted);
+  color: var(--text-2);
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.wt-title .sep {
+  color: var(--muted);
+}
+
+.wt-title .wt-status {
+  text-transform: uppercase;
+  font-size: 0.68rem;
+  letter-spacing: 0.05em;
+  color: var(--muted);
 }
 
 .legend {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
-  font-size: 0.75rem;
-  color: var(--muted);
+  gap: 1rem;
+  margin-left: 0.5rem;
+  padding-left: 1rem;
+  border-left: 1px solid var(--hairline);
+  font-size: 0.76rem;
+  color: var(--text-2);
 }
 
-.legend .dot {
+.legend .item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.legend .swatch {
   display: inline-block;
-  width: 0.6rem;
-  height: 0.6rem;
-  border-radius: 50%;
-  margin-right: 0.2rem;
+  width: 0.8rem;
+  height: 0.8rem;
+  border-radius: 3px;
+  flex: none;
+}
+
+.legend .swatch.solid {
+  background: var(--claim-solid);
+}
+
+.legend .swatch.wash {
+  background: var(--claim-wash);
+  border: 1.5px solid var(--claim-wash-border);
+}
+
+.legend .swatch.outline {
+  background: transparent;
+  border: 1.5px dashed var(--muted);
 }
 
 #toolbar button {
-  padding: 0.3rem 0.7rem;
-  border: 1px solid var(--border);
-  border-radius: 6px;
-  background: var(--bg);
+  padding: 0.35rem 0.8rem;
+  border: 1px solid var(--hairline);
+  border-radius: 7px;
+  background: var(--surface-2);
   color: var(--text);
+  font-size: 0.82rem;
   cursor: pointer;
 }
 
@@ -102,31 +153,46 @@ body {
 
 .status {
   margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
   color: var(--muted);
-  font-size: 0.85rem;
+  font-size: 0.8rem;
+}
+
+.status .status-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: var(--muted);
+}
+
+.status.is-connected .status-dot {
+  background: var(--status-good);
 }
 
 #cy {
   flex: 1 1 auto;
   min-height: 0;
+  background: var(--page);
 }
 
 /* Node/entity detail panel, shown on click. */
 #detail {
   position: absolute;
   right: 1rem;
-  top: 3.2rem;
+  top: 4rem;
   bottom: 1rem;
-  width: 22rem;
+  width: 21rem;
   display: none;
   flex-direction: column;
-  gap: 0.4rem;
-  padding: 0.7rem 0.85rem;
+  gap: 0.5rem;
+  padding: 1rem 1.1rem;
   overflow-y: auto;
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  box-shadow: 0 6px 24px #00000033;
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  border-radius: 12px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.28);
 }
 
 #detail.open {
@@ -135,46 +201,99 @@ body {
 
 #detail .d-title {
   font-weight: 700;
-  font-size: 1rem;
+  font-size: 1.05rem;
+  letter-spacing: -0.01em;
 }
 
 #detail .d-role {
-  color: var(--muted);
+  color: var(--text-2);
   font-size: 0.85rem;
+  line-height: 1.4;
 }
 
 #detail .d-badges {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.35rem;
+  gap: 0.4rem;
+  margin-top: 0.15rem;
 }
 
 #detail .badge {
-  font-size: 0.7rem;
+  font-size: 0.68rem;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.03em;
-  padding: 0.1rem 0.45rem;
+  letter-spacing: 0.04em;
+  padding: 0.2rem 0.55rem;
   border-radius: 999px;
-  color: #fff;
+  line-height: 1.4;
+}
+
+#detail .badge.claim-observed {
+  background: var(--claim-solid);
+  color: #ffffff;
+}
+
+#detail .badge.claim-inferred {
+  background: var(--claim-wash);
+  color: var(--claim-solid);
+  border: 1px solid var(--claim-wash-border);
+}
+
+#detail .badge.claim-unknown {
+  background: transparent;
+  color: var(--muted);
+  border: 1px dashed var(--muted);
+}
+
+#detail .badge.confidence {
+  background: var(--surface-2);
+  color: var(--text-2);
+  border: 1px solid var(--hairline);
+}
+
+#detail .badge.status-accepted {
+  background: var(--status-good);
+  color: #ffffff;
+}
+#detail .badge.status-challenged {
+  background: var(--status-critical);
+  color: #ffffff;
+}
+#detail .badge.status-corrected {
+  background: var(--status-warning);
+  color: #241a00;
+}
+#detail .badge.status-proposed,
+#detail .badge.status-unresolved {
+  background: transparent;
+  color: var(--muted);
+  border: 1px solid var(--status-neutral);
 }
 
 #detail .d-section-title {
-  margin-top: 0.4rem;
-  font-size: 0.72rem;
+  margin-top: 0.5rem;
+  font-size: 0.7rem;
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.05em;
   color: var(--muted);
-  border-top: 1px solid var(--border);
-  padding-top: 0.4rem;
+  border-top: 1px solid var(--hairline);
+  padding-top: 0.55rem;
 }
 
 #detail .d-evidence {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: 0.78rem;
+  color: var(--text-2);
+  background: var(--surface-2);
+  border-radius: 6px;
+  padding: 0.35rem 0.5rem;
+  word-break: break-all;
 }
 
 #detail .d-hint {
   color: var(--muted);
   font-size: 0.72rem;
-  margin-top: 0.5rem;
+  margin-top: 0.6rem;
+  line-height: 1.4;
 }

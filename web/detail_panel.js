@@ -1,6 +1,8 @@
 /* walkthrough detail panel — renders one entity's evidence/confidence
  * into the #detail aside. Plain DOM, no framework, matching the rest of
- * this vendored-libraries-only, no-build-step frontend.
+ * this vendored-libraries-only, no-build-step frontend. Badge colors come
+ * from CSS classes (see web/styles.css) sourced from the dataviz skill's
+ * palette, not inline styles, so theme (light/dark) swaps for free.
  */
 window.WalkthroughDetailPanel = (function () {
   'use strict';
@@ -20,20 +22,18 @@ window.WalkthroughDetailPanel = (function () {
     return e;
   }
 
-  function badge(text, colorVar) {
-    var b = el('span', 'badge', text);
-    b.style.background = getComputedStyle(document.body).getPropertyValue(colorVar).trim();
-    return b;
+  function badge(text, extraClass) {
+    return el('span', 'badge ' + extraClass, text);
   }
 
-  function claimColorVar(claim_type) {
-    if (claim_type === 'OBSERVED') return '--observed';
-    if (claim_type === 'INFERRED') return '--inferred';
-    return '--unknown';
+  function claimBadgeClass(claim_type) {
+    if (claim_type === 'OBSERVED') return 'claim-observed';
+    if (claim_type === 'INFERRED') return 'claim-inferred';
+    return 'claim-unknown';
   }
 
-  function statusColorVar(status) {
-    return '--status-' + (status || 'proposed');
+  function statusBadgeClass(status) {
+    return 'status-' + (status || 'proposed');
   }
 
   /* Render `entity` (a component/relationship/decision/assumption
@@ -52,22 +52,21 @@ window.WalkthroughDetailPanel = (function () {
     }
 
     var badges = el('div', 'd-badges');
-    badges.appendChild(badge(entity.claim_type || 'UNKNOWN', claimColorVar(entity.claim_type)));
+    badges.appendChild(badge(entity.claim_type || 'UNKNOWN', claimBadgeClass(entity.claim_type)));
     if (entity.confidence) {
-      badges.appendChild(badge(entity.confidence, claimColorVar(entity.claim_type)));
+      badges.appendChild(badge(entity.confidence, 'confidence'));
     }
-    badges.appendChild(badge(STATUS_LABEL[entity.status] || entity.status || 'proposed', statusColorVar(entity.status)));
+    badges.appendChild(badge(STATUS_LABEL[entity.status] || entity.status || 'proposed', statusBadgeClass(entity.status)));
     container.appendChild(badges);
 
     var evidence = entity.evidence || [];
+    container.appendChild(el('div', 'd-section-title', 'Evidence'));
     if (evidence.length > 0) {
-      container.appendChild(el('div', 'd-section-title', 'Evidence'));
       evidence.forEach(function (e) {
         var line = e.file + (e.line ? ':' + e.line : '') + (e.symbol ? '  (' + e.symbol + ')' : '');
         container.appendChild(el('div', 'd-evidence', line));
       });
     } else {
-      container.appendChild(el('div', 'd-section-title', 'Evidence'));
       container.appendChild(el('div', 'd-evidence', 'none cited'));
     }
 
