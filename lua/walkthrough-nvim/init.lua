@@ -121,7 +121,17 @@ function M.history(walkthrough_id)
   end
 
   if not manifest.revisions or #manifest.revisions == 0 then
-    vim.notify('walkthrough: no revisions for "' .. walkthrough_id .. '" yet', vim.log.levels.WARN)
+    local paths = require('walkthrough-nvim.persist.paths')
+    vim.notify(
+      'walkthrough: no revisions for "'
+        .. walkthrough_id
+        .. '" under root '
+        .. root
+        .. ' (repo dir: '
+        .. paths.repo_dir(root)
+        .. ') -- if you seeded this elsewhere, cwd/root resolved differently here',
+      vim.log.levels.WARN
+    )
     return
   end
 
