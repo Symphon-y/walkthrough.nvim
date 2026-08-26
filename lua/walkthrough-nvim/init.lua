@@ -32,37 +32,24 @@ function M.validate(path)
   end
 end
 
---- Open a walkthrough's current exploration revision: starts the local
---- server, points a browser at its component/architecture diagram, and
---- wires jump-to-source back into this Neovim instance.
-function M.open(walkthrough_id)
-  local root_mod = require('walkthrough-nvim.persist.root')
+local function no_id_notice(root)
+  local io_mod = require('walkthrough-nvim.persist.io')
+  local names = io_mod.list_walkthroughs(root)
+  if #names == 0 then
+    vim.notify('walkthrough: no walkthroughs found for this repo yet', vim.log.levels.WARN)
+  else
+    vim.notify('walkthrough: usage :WalkthroughOpen {id}\navailable: ' .. table.concat(names, ', '), vim.log.levels.WARN)
+  end
+end
+
+--- Load `revision_id` of `walkthrough_id`: starts the local server, points
+--- a browser at its component/architecture diagram, and wires
+--- jump-to-source back into this Neovim instance. Shared by M.open
+--- (resolves the current exploration revision) and M.load (an explicit
+--- revision, e.g. from :WalkthroughHistory).
+local function open_revision(root, walkthrough_id, revision_id)
   local io_mod = require('walkthrough-nvim.persist.io')
   local state = require('walkthrough-nvim.ui.state')
-
-  local root = root_mod.find()
-
-  if not walkthrough_id or walkthrough_id == '' then
-    local names = io_mod.list_walkthroughs(root)
-    if #names == 0 then
-      vim.notify('walkthrough: no walkthroughs found for this repo yet', vim.log.levels.WARN)
-    else
-      vim.notify('walkthrough: usage :WalkthroughOpen {id}\navailable: ' .. table.concat(names, ', '), vim.log.levels.WARN)
-    end
-    return
-  end
-
-  local ok, manifest = pcall(io_mod.read_manifest, root, walkthrough_id)
-  if not ok then
-    vim.notify('walkthrough: ' .. tostring(manifest), vim.log.levels.ERROR)
-    return
-  end
-
-  local revision_id = manifest.current and manifest.current.exploration
-  if not revision_id then
-    vim.notify('walkthrough: no exploration revision for "' .. walkthrough_id .. '" yet -- run the walkthrough-explore skill first', vim.log.levels.WARN)
-    return
-  end
 
   local read_ok, model = io_mod.read_revision(root, walkthrough_id, revision_id)
   if not read_ok then
@@ -80,6 +67,74 @@ function M.open(walkthrough_id)
 
   require('walkthrough-nvim.server.browser').open(server:url('/'))
   vim.notify('walkthrough: opened ' .. walkthrough_id .. ' (' .. revision_id .. ')', vim.log.levels.INFO)
+end
+
+--- Open a walkthrough's current exploration revision.
+function M.open(walkthrough_id)
+  local root = require('walkthrough-nvim.persist.root').find()
+
+  if not walkthrough_id or walkthrough_id == '' then
+    no_id_notice(root)
+    return
+  end
+
+  local io_mod = require('walkthrough-nvim.persist.io')
+  local ok, manifest = pcall(io_mod.read_manifest, root, walkthrough_id)
+  if not ok then
+    vim.notify('walkthrough: ' .. tostring(manifest), vim.log.levels.ERROR)
+    return
+  end
+
+  local revision_id = manifest.current and manifest.current.exploration
+  if not revision_id then
+    vim.notify('walkthrough: no exploration revision for "' .. walkthrough_id .. '" yet -- run the walkthrough-explore skill first', vim.log.levels.WARN)
+    return
+  end
+
+  open_revision(root, walkthrough_id, revision_id)
+end
+
+--- Open a specific revision directly (bypasses manifest.current).
+function M.load(walkthrough_id, revision_id)
+  if not walkthrough_id or walkthrough_id == '' or not revision_id or revision_id == '' then
+    vim.notify('walkthrough: usage :WalkthroughLoad {walkthrough_id} {revision_id}', vim.log.levels.ERROR)
+    return
+  end
+  local root = require('walkthrough-nvim.persist.root').find()
+  open_revision(root, walkthrough_id, revision_id)
+end
+
+--- Pick a revision from a walkthrough's history and open it.
+function M.history(walkthrough_id)
+  local root = require('walkthrough-nvim.persist.root').find()
+
+  if not walkthrough_id or walkthrough_id == '' then
+    no_id_notice(root)
+    return
+  end
+
+  local io_mod = require('walkthrough-nvim.persist.io')
+  local ok, manifest = pcall(io_mod.read_manifest, root, walkthrough_id)
+  if not ok then
+    vim.notify('walkthrough: ' .. tostring(manifest), vim.log.levels.ERROR)
+    return
+  end
+
+  if not manifest.revisions or #manifest.revisions == 0 then
+    vim.notify('walkthrough: no revisions for "' .. walkthrough_id .. '" yet', vim.log.levels.WARN)
+    return
+  end
+
+  vim.ui.select(manifest.revisions, {
+    prompt = 'walkthrough history: ' .. walkthrough_id,
+    format_item = function(rev)
+      return string.format('%s  ·  %s  ·  %s  ·  %s', rev.id, rev.phase, rev.status, rev.created_by or '?')
+    end,
+  }, function(choice)
+    if choice then
+      M.load(walkthrough_id, choice.id)
+    end
+  end)
 end
 
 --- Close the active walkthrough session, stopping its server.

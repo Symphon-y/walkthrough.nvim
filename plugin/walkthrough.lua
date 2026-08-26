@@ -19,3 +19,12 @@ end, { nargs = '?', desc = 'Open a walkthrough\'s current exploration revision' 
 vim.api.nvim_create_user_command('WalkthroughClose', function()
   require('walkthrough-nvim').close()
 end, { desc = 'Close the active walkthrough session' })
+
+vim.api.nvim_create_user_command('WalkthroughHistory', function(cmd_opts)
+  require('walkthrough-nvim').history(cmd_opts.args)
+end, { nargs = '?', desc = 'Pick a past revision of a walkthrough and open it' })
+
+vim.api.nvim_create_user_command('WalkthroughLoad', function(cmd_opts)
+  local id, revision_id = cmd_opts.args:match('^(%S+)%s+(%S+)$')
+  require('walkthrough-nvim').load(id, revision_id)
+end, { nargs = '?', desc = 'Open a specific revision: :WalkthroughLoad {walkthrough_id} {revision_id}' })

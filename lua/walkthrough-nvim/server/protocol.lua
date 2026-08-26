@@ -5,14 +5,12 @@
 -- nothing about transport (server.lua) or how the engine fulfils a
 -- request -- only the contract between them.
 --
--- Phase 1 only needs focus/reveal: a walkthrough model is small and
--- curated up front (unlike cartograph's incrementally-fetched-via-LSP
--- graph), so there is nothing to progressively "expand" -- the whole
--- model renders immediately, and clicking a node highlights it and its
--- neighbors (model/focus.lua's overlay) rather than fetching more nodes.
--- correct/challenge/accept land in Phase 2 alongside the reconciliation
--- loop, per the implementation plan -- adding routes here is a one-line
--- change when that phase starts.
+-- Phase 1 needs focus/reveal: a walkthrough model is small and curated up
+-- front (unlike cartograph's incrementally-fetched-via-LSP graph), so
+-- there is nothing to progressively "expand" -- the whole model renders
+-- immediately, and clicking a node highlights it and its neighbors
+-- (model/focus.lua's overlay) rather than fetching more nodes.
+-- Phase 2 adds accept/challenge/correct -- the engineer's correction loop.
 
 local M = {}
 
@@ -23,6 +21,9 @@ local ROUTES = {
   focus = { method = 'focus', params = { 'nodeId' } },
   clearFocus = { method = 'clear_focus', params = {} },
   reveal = { method = 'reveal', params = { 'nodeId' } },
+  accept = { method = 'accept', params = { 'nodeId' } },
+  challenge = { method = 'challenge', params = { 'nodeId' } },
+  correct = { method = 'correct', params = { 'nodeId', 'note' } },
 }
 
 local function err(message)

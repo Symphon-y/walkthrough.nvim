@@ -223,5 +223,17 @@ window.createComponentRenderer = function (ctx) {
     cy.fit(undefined, 50);
   }
 
-  return { ingest: ingest, applyFocus: applyFocus, fit: fit };
+  /* Patch claim_type/confidence/status onto existing nodes (a correction
+   * changes those, never the model's shape) without re-running layout --
+   * a full re-ingest would jump the diagram on every accept/challenge. */
+  function updateEntities(model) {
+    (model.components || []).forEach(function (c) {
+      var node = cy.getElementById(c.id);
+      if (node.nonempty()) {
+        node.data({ claim_type: c.claim_type, confidence: c.confidence, status: c.status });
+      }
+    });
+  }
+
+  return { ingest: ingest, applyFocus: applyFocus, updateEntities: updateEntities, fit: fit };
 };

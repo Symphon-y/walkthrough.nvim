@@ -291,6 +291,70 @@ body {
   word-break: break-all;
 }
 
+#detail .d-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+#detail .d-btn {
+  flex: 1 1 0;
+  padding: 0.4rem 0.6rem;
+  border-radius: 7px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  background: transparent;
+}
+
+#detail .d-btn-accept {
+  border: 1.5px solid var(--status-good);
+  color: var(--status-good);
+}
+
+#detail .d-btn-accept:hover {
+  background: var(--status-good);
+  color: #ffffff;
+}
+
+#detail .d-btn-challenge {
+  border: 1.5px solid var(--status-critical);
+  color: var(--status-critical);
+}
+
+#detail .d-btn-challenge:hover {
+  background: var(--status-critical);
+  color: #ffffff;
+}
+
+#detail .d-note {
+  width: 100%;
+  resize: vertical;
+  padding: 0.5rem 0.6rem;
+  border-radius: 7px;
+  border: 1px solid var(--hairline);
+  background: var(--surface-2);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
+#detail .d-note:focus {
+  outline: none;
+  border-color: var(--status-warning);
+}
+
+#detail .d-btn-correct {
+  width: 100%;
+  border: 1.5px solid var(--status-warning);
+  color: var(--status-warning);
+}
+
+#detail .d-btn-correct:hover {
+  background: var(--status-warning);
+  color: #241a00;
+}
+
 #detail .d-hint {
   color: var(--muted);
   font-size: 0.72rem;

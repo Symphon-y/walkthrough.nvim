@@ -3,16 +3,18 @@
 -- translates browser actions into calls against ui/state's active
 -- session, backed by the pure model/ modules.
 --
--- Phase 1 surface: snapshot (initial GET /api/model), focus (highlight a
--- node + its neighbors, dim the rest), clear_focus, reveal (jump to
--- source). Correct/challenge/accept land in Phase 2 as more methods on
--- this same table.
+-- snapshot (initial GET /api/model), focus (highlight a node + its
+-- neighbors, dim the rest), clear_focus, reveal (jump to source), and the
+-- correction loop: accept/challenge/correct mutate the current revision
+-- in place (ui/correct.lua) and broadcast the updated model so every
+-- connected browser reflects the new status live.
 
 local M = {}
 
 local state = require('walkthrough-nvim.ui.state')
 local focus = require('walkthrough-nvim.model.focus')
 local reveal = require('walkthrough-nvim.ui.reveal')
+local correct_mod = require('walkthrough-nvim.ui.correct')
 
 --- The current model, for the browser's initial GET /api/model fetch.
 --- Includes the active focus path so a reconnecting browser (e.g. a page
@@ -57,6 +59,39 @@ function M.reveal(node_id)
     return
   end
   reveal.reveal(state.session.model, node_id)
+end
+
+--- Push the whole current model to every connected browser -- used after
+--- a correction changes an entity's status, since that's a data change,
+--- not just a view-state change (focus:update is for the latter).
+local function broadcast_model()
+  if state.session.server then
+    state.session.server:broadcast('model:update', { model = state.session.model })
+  end
+end
+
+local function apply_correction(fn, ...)
+  if not state.active() then
+    return
+  end
+  local ok, err = fn(...)
+  if ok then
+    broadcast_model()
+  else
+    vim.notify('walkthrough: ' .. tostring(err), vim.log.levels.ERROR)
+  end
+end
+
+function M.accept(node_id)
+  apply_correction(correct_mod.accept, node_id)
+end
+
+function M.challenge(node_id)
+  apply_correction(correct_mod.challenge, node_id)
+end
+
+function M.correct(node_id, note)
+  apply_correction(correct_mod.correct, node_id, note)
 end
 
 return M

@@ -56,12 +56,38 @@
   var model = null;
   var view = null;
   var detail = document.getElementById('detail');
+  var focusedId = null; // the entity the detail panel is currently showing, if any
+
+  function showEntity(id) {
+    focusedId = id;
+    WalkthroughDetailPanel.show(detail, findEntity(model, id), {
+      onAccept: function () {
+        send('accept', { nodeId: id });
+      },
+      onChallenge: function () {
+        send('challenge', { nodeId: id });
+      },
+      onCorrect: function (note) {
+        send('correct', { nodeId: id, note: note });
+      },
+    });
+  }
 
   function connect() {
     var es = new EventSource(withToken('/events'));
     es.addEventListener('focus:update', function (e) {
       try {
         view.applyFocus(JSON.parse(e.data));
+      } catch (_) {
+        /* ignore malformed/late event */
+      }
+    });
+    es.addEventListener('model:update', function (e) {
+      try {
+        var d = JSON.parse(e.data);
+        model = d.model;
+        view.updateEntities(model);
+        if (focusedId) showEntity(focusedId); // refresh the open panel with the new status
       } catch (_) {
         /* ignore malformed/late event */
       }
@@ -85,10 +111,11 @@
       onNodeClick: function (id) {
         send('reveal', { nodeId: id });
         send('focus', { nodeId: id });
-        WalkthroughDetailPanel.show(detail, findEntity(model, id));
+        showEntity(id);
       },
       onClearFocus: function () {
         send('clearFocus');
+        focusedId = null;
         WalkthroughDetailPanel.show(detail, null);
       },
     });
