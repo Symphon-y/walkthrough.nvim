@@ -1,0 +1,97 @@
+{
+  "schema_version": 1,
+  "walkthrough_id": "checkout-refund-flow",
+  "revision_id": "impl-001",
+  "phase": "implementation",
+  "parent_revision": "expl-002",
+  "status": "draft",
+  "components": [
+    {
+      "id": "component:refund-controller",
+      "kind": "component",
+      "name": "RefundController",
+      "role": "Receives refund HTTP requests.",
+      "claim_type": "OBSERVED",
+      "confidence": "high",
+      "evidence": [ { "file": "src/refunds/RefundController.cs", "line": 12 } ],
+      "status": "accepted"
+    },
+    {
+      "id": "component:refund-service",
+      "kind": "component",
+      "name": "RefundService",
+      "role": "Coordinates refund issuance and delegates gateway calls to RefundOrchestrator.",
+      "claim_type": "OBSERVED",
+      "confidence": "high",
+      "evidence": [ { "file": "src/refunds/RefundService.cs", "line": 42 } ],
+      "status": "accepted"
+    },
+    {
+      "id": "component:refund-orchestrator",
+      "kind": "component",
+      "name": "RefundOrchestrator",
+      "role": "New: owns retry/backoff around the payment gateway call.",
+      "claim_type": "OBSERVED",
+      "confidence": "high",
+      "evidence": [ { "file": "src/refunds/RefundOrchestrator.cs", "line": 10 } ],
+      "status": "accepted"
+    }
+  ],
+  "relationships": [
+    {
+      "id": "rel:refund-controller--calls--refund-service",
+      "from": "component:refund-controller",
+      "to": "component:refund-service",
+      "kind": "calls",
+      "data_shape": "IssueRefundCommand",
+      "claim_type": "OBSERVED",
+      "confidence": "high",
+      "evidence": [ { "file": "src/refunds/RefundController.cs", "line": 30 } ],
+      "status": "accepted"
+    },
+    {
+      "id": "rel:refund-service--calls--refund-orchestrator",
+      "from": "component:refund-service",
+      "to": "component:refund-orchestrator",
+      "kind": "calls",
+      "data_shape": "RefundRequest",
+      "claim_type": "OBSERVED",
+      "confidence": "high",
+      "evidence": [ { "file": "src/refunds/RefundService.cs", "line": 60 } ],
+      "status": "accepted"
+    }
+  ],
+  "decisions": [
+    {
+      "id": "decision:sync-vs-async-refund",
+      "question": "Should refund issuance be synchronous or queued?",
+      "options": [
+        { "option": "Synchronous gateway call", "outcome": "rejected", "reason": "Gateway p99 latency is 4s+.", "evidence": [] },
+        { "option": "Enqueue to background worker", "outcome": "chosen", "reason": "Matches existing OrderFulfillment queue pattern.", "evidence": [] }
+      ],
+      "claim_type": "INFERRED",
+      "confidence": "medium",
+      "status": "accepted"
+    },
+    {
+      "id": "decision:auth-boundary",
+      "question": "Where should refund authorization be enforced?",
+      "options": [
+        { "option": "Inside RefundOrchestrator", "outcome": "chosen", "reason": "Moved with the gateway call during implementation.", "evidence": [] }
+      ],
+      "claim_type": "OBSERVED",
+      "confidence": "high",
+      "status": "accepted"
+    },
+    {
+      "id": "decision:retry-policy",
+      "question": "How many times should a failed gateway call be retried?",
+      "options": [
+        { "option": "3 retries with exponential backoff", "outcome": "chosen", "reason": "Matches PaymentGatewayClient's documented rate limit.", "evidence": [] }
+      ],
+      "claim_type": "OBSERVED",
+      "confidence": "high",
+      "status": "accepted"
+    }
+  ]
+}

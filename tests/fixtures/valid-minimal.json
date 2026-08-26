@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "walkthrough_id": "checkout-refund-flow",
+  "revision_id": "expl-001",
+  "phase": "exploration",
+  "status": "draft",
+  "components": [
+    {
+      "id": "component:refund-controller",
+      "kind": "component",
+      "name": "RefundController",
+      "claim_type": "OBSERVED",
+      "confidence": "high",
+      "evidence": [ { "file": "src/refunds/RefundController.cs", "line": 12 } ],
+      "status": "proposed"
+    }
+  ],
+  "relationships": []
+}

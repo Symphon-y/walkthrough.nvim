@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "walkthrough_id": "checkout-refund-flow",
+  "revision_id": "expl-001",
+  "phase": "exploration",
+  "status": "draft",
+  "components": [
+    {
+      "id": "component:refund-service",
+      "kind": "component",
+      "name": "RefundService",
+      "claim_type": "OBSERVED",
+      "confidence": "high",
+      "evidence": [ { "file": "src/refunds/RefundService.cs", "line": 42 } ],
+      "status": "proposed"
+    }
+  ],
+  "relationships": [
+    {
+      "id": "rel:refund-service--calls--nowhere",
+      "from": "component:refund-service",
+      "to": "component:does-not-exist",
+      "kind": "calls",
+      "status": "proposed"
+    }
+  ]
+}
