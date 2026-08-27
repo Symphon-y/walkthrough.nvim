@@ -32,13 +32,13 @@ function M.validate(path)
   end
 end
 
-local function no_id_notice(root)
+local function no_id_notice(root, usage)
   local io_mod = require('walkthrough-nvim.persist.io')
   local names = io_mod.list_walkthroughs(root)
   if #names == 0 then
     vim.notify('walkthrough: no walkthroughs found for this repo yet', vim.log.levels.WARN)
   else
-    vim.notify('walkthrough: usage :WalkthroughOpen {id}\navailable: ' .. table.concat(names, ', '), vim.log.levels.WARN)
+    vim.notify('walkthrough: usage ' .. usage .. '\navailable: ' .. table.concat(names, ', '), vim.log.levels.WARN)
   end
 end
 
@@ -75,7 +75,7 @@ function M.open(walkthrough_id)
   local root = require('walkthrough-nvim.persist.root').find()
 
   if not walkthrough_id or walkthrough_id == '' then
-    no_id_notice(root)
+    no_id_notice(root, ':WalkthroughOpen {id}')
     return
   end
 
@@ -110,7 +110,7 @@ function M.history(walkthrough_id)
   local root = require('walkthrough-nvim.persist.root').find()
 
   if not walkthrough_id or walkthrough_id == '' then
-    no_id_notice(root)
+    no_id_notice(root, ':WalkthroughHistory {id}')
     return
   end
 
@@ -154,7 +154,7 @@ function M.diff(walkthrough_id)
   local root = require('walkthrough-nvim.persist.root').find()
 
   if not walkthrough_id or walkthrough_id == '' then
-    no_id_notice(root)
+    no_id_notice(root, ':WalkthroughDiff {id}')
     return
   end
 
