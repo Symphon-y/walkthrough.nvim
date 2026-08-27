@@ -90,11 +90,12 @@ end
 -- it will show here as a remove+add, not a rename — id-reuse discipline
 -- is a v0.1 prompt convention, not something this module can verify.
 --
--- @return { components = {...}, relationships = {...}, decisions = {...}, summary = {...} }
+-- @return { components = {...}, data_entities = {...}, relationships = {...}, decisions = {...}, summary = {...} }
 function M.diff(before, after)
   assert(type(before) == 'table' and type(after) == 'table', 'diff requires two model tables')
 
   local components = diff_collection(before.components, after.components, { 'name', 'kind', 'role', 'group', 'parent' })
+  local data_entities = diff_collection(before.data_entities, after.data_entities, { 'name', 'role', 'fields' })
   local relationships = diff_collection(before.relationships, after.relationships, { 'from', 'to', 'kind', 'data_shape' })
   local decisions = diff_collection(before.decisions, after.decisions, { 'question', 'options' })
 
@@ -104,10 +105,12 @@ function M.diff(before, after)
 
   return {
     components = components,
+    data_entities = data_entities,
     relationships = relationships,
     decisions = decisions,
     summary = {
       components = counts(components),
+      data_entities = counts(data_entities),
       relationships = counts(relationships),
       decisions = counts(decisions),
     },

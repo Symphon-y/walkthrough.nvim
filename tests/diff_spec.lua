@@ -77,6 +77,42 @@ describe('walkthrough-nvim.model.diff', function()
     end)
   end)
 
+  -- Self-contained inline tables (not the shared diff-before/after.json
+  -- fixtures, which are already large) -- the first real exercise of
+  -- diff_collection against data_entities input, even though the
+  -- function itself needs no change to support it.
+  describe('data_entities', function()
+    it('classifies added/removed/changed/unchanged the same as every other section', function()
+      local before_data = {
+        data_entities = {
+          { id = 'data:patient', name = 'Patient', role = 'One row per patient.' },
+          { id = 'data:refund_ledger', name = 'RefundLedger', role = 'Audit trail.' },
+        },
+      }
+      local after_data = {
+        data_entities = {
+          { id = 'data:patient', name = 'Patient', role = 'One row per patient.' }, -- unchanged
+          { id = 'data:refund_ledger', name = 'RefundLedger', role = 'Audit trail, now with a status column.' }, -- changed
+          { id = 'data:cohort', name = 'Cohort', role = 'A saved patient cohort.' }, -- added
+        },
+      }
+      -- data:refund_ledger from before_data is absent from after_data's
+      -- surviving set only if omitted; here it's present-but-changed, so
+      -- there's no "removed" case in this fixture -- add one explicitly.
+      before_data.data_entities[3] = { id = 'data:legacy_export', name = 'LegacyExport', role = 'Superseded.' }
+
+      local result = diff.diff(before_data, after_data)
+
+      assert.same({ 'data:cohort' }, ids_of(result.data_entities.added))
+      assert.same({ 'data:legacy_export' }, ids_of(result.data_entities.removed))
+      assert.equals(1, #result.data_entities.changed)
+      assert.equals('data:refund_ledger', result.data_entities.changed[1].id)
+      assert.same({ 'role' }, result.data_entities.changed[1].fields)
+      assert.same({ 'data:patient' }, ids_of(result.data_entities.unchanged))
+      assert.same({ added = 1, removed = 1, changed = 1 }, result.summary.data_entities)
+    end)
+  end)
+
   it('reports no differences when diffing a model against itself', function()
     local self_diff = diff.diff(before, before)
     assert.same({ added = 0, removed = 0, changed = 0 }, self_diff.summary.components)

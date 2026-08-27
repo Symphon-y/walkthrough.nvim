@@ -132,6 +132,7 @@ window.createDeltaView = function (container, ctx) {
       return;
     }
     section('Components', diff.components);
+    section('Data Entities', diff.data_entities);
     section('Relationships', diff.relationships);
     section('Decisions', diff.decisions);
   }
