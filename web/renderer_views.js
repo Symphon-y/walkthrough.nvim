@@ -31,6 +31,7 @@
   function claimBadgeClass(claim_type) {
     if (claim_type === 'OBSERVED') return 'claim-observed';
     if (claim_type === 'INFERRED') return 'claim-inferred';
+    if (claim_type === 'PROPOSED') return 'claim-proposed';
     return 'claim-unknown';
   }
 

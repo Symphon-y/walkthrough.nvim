@@ -618,6 +618,12 @@ button.delta-name:hover {
   border: 1px dashed var(--muted);
 }
 
+.badge.claim-proposed {
+  background: transparent;
+  color: var(--proposed-accent);
+  border: 1px dashed var(--proposed-accent);
+}
+
 .badge.confidence {
   background: var(--surface-2);
   color: var(--text-2);

@@ -87,6 +87,14 @@ Include:
 - `data_lineage` / `flows`: include when the feature is fundamentally about
   a request flow or a piece of data changing shape end-to-end -- skip them
   when they wouldn't add anything beyond what `relationships` already shows.
+- `data_entities`: include only when the feature is genuinely about data the
+  codebase persists (DB tables, documents, etc.) -- give each entity a
+  `data:`-prefixed id and a few notable `fields`. Model ER associations
+  between two data entities (`has_one`/`has_many`/`belongs_to`/`many_to_many`)
+  and "this component reads/writes that entity" (`reads`/`writes`) as
+  ordinary `relationships[]` entries pointing at `data:` ids -- there is no
+  separate ER relationship array. Skip `data_entities` entirely for
+  features that don't touch persisted data.
 
 Write the JSON to the path from step 3 using your file-editing tool
 directly. Do not run `:WalkthroughOpen` yourself or ask the user to -- tell

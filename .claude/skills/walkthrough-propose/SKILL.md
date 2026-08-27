@@ -88,6 +88,15 @@ Start from the exploration revision's content, then:
   `INFERRED` or `PROPOSED` depending on whether you're reasoning from
   existing patterns or proposing something with no precedent in this codebase.
 - Leave `corrections: []` empty.
+- `data_entities`: same reuse-vs-new-id rules as everything above -- carry
+  over an existing `data:` entity unchanged if you're not touching it, reuse
+  its id if you're changing its `fields`/`role`, mint a fresh `data:` id with
+  `claim_type: "PROPOSED"` for a new table/document the feature needs. Only
+  include this when the proposal genuinely introduces or changes persisted
+  data -- most proposals won't need it. Model new ER associations
+  (`has_one`/`has_many`/`belongs_to`/`many_to_many`) and new reads/writes as
+  ordinary `relationships[]` entries pointing at `data:` ids, same as the
+  exploration.
 
 ## 5. After writing
 
