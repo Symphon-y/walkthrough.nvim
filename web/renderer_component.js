@@ -11,10 +11,12 @@
  *   claim_type -> fill treatment: OBSERVED = solid, INFERRED = wash,
  *     UNKNOWN = outline only. Self-explanatory without reading a legend
  *     twice -- "how much is actually here" reads as "how much fill is there."
+ *     PROPOSED (not built yet) is a different signal, not another step on
+ *     that confidence ramp -- its own violet accent, always-dashed outline.
  *   status -> a thin ring (the fixed status palette), never the fill --
  *     two encodings on two different visual channels so they don't fight.
  *   confidence -> border style (dashed at low confidence) -- secondary,
- *     minor signal only.
+ *     minor signal only. Overridden unconditionally for PROPOSED (see above).
  *
  * ctx: { container, onNodeClick(id), onClearFocus() }
  * returns: { ingest(model), applyFocus(overlay), fit }
@@ -77,18 +79,21 @@ window.createComponentRenderer = function (ctx) {
 
           'background-color': function (ele) {
             var claim = ele.data('claim_type');
-            return claim === 'UNKNOWN' ? 'transparent' : cssVar('--claim-solid');
+            return claim === 'UNKNOWN' || claim === 'PROPOSED' ? 'transparent' : cssVar('--claim-solid');
           },
           'background-opacity': function (ele) {
             var claim = ele.data('claim_type');
             if (claim === 'OBSERVED') return 1;
             if (claim === 'INFERRED') return 0.16;
-            return 0; // UNKNOWN: outline only
+            return 0; // UNKNOWN / PROPOSED: outline only
           },
 
           label: 'data(label)',
           color: function (ele) {
-            return ele.data('claim_type') === 'OBSERVED' ? '#ffffff' : cssVar('--text');
+            var claim = ele.data('claim_type');
+            if (claim === 'OBSERVED') return '#ffffff';
+            if (claim === 'PROPOSED') return cssVar('--proposed-accent');
+            return cssVar('--text');
           },
           'font-size': 12,
           'font-weight': 500,
@@ -102,6 +107,9 @@ window.createComponentRenderer = function (ctx) {
             return statusColor(ele.data('status'), ele.data('claim_type'));
           },
           'border-style': function (ele) {
+            // Not built yet is unconditional -- always dashed, regardless
+            // of confidence (unlike the other three claim types).
+            if (ele.data('claim_type') === 'PROPOSED') return 'dashed';
             return ele.data('confidence') === 'low' ? 'dashed' : 'solid';
           },
           'border-opacity': 1,
@@ -144,9 +152,15 @@ window.createComponentRenderer = function (ctx) {
     if (status === 'accepted') return cssVar('--status-good');
     if (status === 'challenged') return cssVar('--status-critical');
     if (status === 'corrected') return cssVar('--status-warning');
-    // proposed / unresolved: no verdict yet -- a quiet neutral ring, not a
-    // status color (those are reserved for an actual reviewed state).
-    return claim_type === 'UNKNOWN' ? cssVar('--muted') : cssVar('--status-neutral');
+    // proposed / unresolved: no review verdict yet -- a quiet neutral ring,
+    // not a status color (those are reserved for an actual reviewed
+    // state) -- except PROPOSED claim_type, where the violet "not built
+    // yet" signal stays visible even before anyone has reviewed it; that
+    // one isn't a review-state color, it's the same entity-level signal
+    // the fill/text already carry.
+    if (claim_type === 'PROPOSED') return cssVar('--proposed-accent');
+    if (claim_type === 'UNKNOWN') return cssVar('--muted');
+    return cssVar('--status-neutral');
   }
 
   cy.on('tap', 'node.entity', function (evt) {

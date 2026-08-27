@@ -13,10 +13,10 @@
     },
     "revision_id": {
       "type": "string",
-      "pattern": "^(expl|impl)-[0-9]{3}$",
+      "pattern": "^(expl|impl|prop)-[0-9]{3}$",
       "description": "Minted by resolving the next path first (see \"Resolving the write path\" below) -- never invent this yourself."
     },
-    "phase": { "enum": ["exploration", "implementation"] },
+    "phase": { "enum": ["exploration", "implementation", "proposal"], "description": "proposal = the target end-state after a proposed feature is built, reviewed as a diff against the exploration revision (see walkthrough-propose skill). Not to be confused with an entity's own status: \"proposed\" (lowercase, below) -- unrelated concepts that happen to share a word." },
     "parent_revision": { "type": ["string", "null"] },
     "created_at": { "type": "string", "format": "date-time" },
     "created_by": { "type": "string", "default": "claude" },
@@ -124,9 +124,9 @@
   },
 
   "definitions": {
-    "claim_type": { "enum": ["OBSERVED", "INFERRED", "UNKNOWN"], "description": "OBSERVED = you read the code and it says this. INFERRED = you're pattern-matching/reasoning, not certain. UNKNOWN = you don't know and are flagging that. OBSERVED claims MUST cite at least one evidence entry -- the validator rejects an OBSERVED claim with none." },
+    "claim_type": { "enum": ["OBSERVED", "INFERRED", "UNKNOWN", "PROPOSED"], "description": "OBSERVED = you read the code and it says this. INFERRED = you're pattern-matching/reasoning, not certain. UNKNOWN = you don't know and are flagging that. PROPOSED = this doesn't exist yet -- you're proposing it in a phase:\"proposal\" revision (walkthrough-propose skill), not describing existing reality; never used in an exploration/implementation revision. OBSERVED claims MUST cite at least one evidence entry -- the validator rejects an OBSERVED claim with none. PROPOSED (like INFERRED/UNKNOWN) does not require evidence -- there's nothing to cite for something not yet built." },
     "confidence": { "enum": ["high", "medium", "low"] },
-    "status": { "enum": ["proposed", "accepted", "challenged", "corrected", "unresolved"], "description": "proposed = you asserted it, engineer hasn't reviewed. Use \"proposed\" for everything you write -- the other four states are set by the engineer's corrections (or, for assumptions, default to \"unresolved\")." },
+    "status": { "enum": ["proposed", "accepted", "challenged", "corrected", "unresolved"], "description": "proposed = you asserted it, engineer hasn't reviewed. Use \"proposed\" for everything you write -- the other four states are set by the engineer's corrections (or, for assumptions, default to \"unresolved\"). Unrelated to claim_type:\"PROPOSED\" or phase:\"proposal\" above -- this is every entity's default review state in every phase, not about whether the entity itself is newly proposed." },
 
     "evidence": {
       "type": "object",

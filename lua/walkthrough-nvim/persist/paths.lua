@@ -81,7 +81,11 @@ function M.revision_path(root, walkthrough_id, revision_id)
   return M.revisions_dir(root, walkthrough_id) .. '/' .. revision_id .. '.json'
 end
 
-local PREFIX_BY_PHASE = { [schema.PHASE.EXPLORATION] = 'expl', [schema.PHASE.IMPLEMENTATION] = 'impl' }
+local PREFIX_BY_PHASE = {
+  [schema.PHASE.EXPLORATION] = 'expl',
+  [schema.PHASE.IMPLEMENTATION] = 'impl',
+  [schema.PHASE.PROPOSAL] = 'prop',
+}
 
 --- Compute the next revision id for `phase` given a manifest table (or
 --- nil, for a brand-new walkthrough). Pure — takes the manifest as data

@@ -36,6 +36,7 @@ describe('walkthrough-nvim.model.evidence', function()
       assert.is_true(evidence.requires_evidence('OBSERVED'))
       assert.is_false(evidence.requires_evidence('INFERRED'))
       assert.is_false(evidence.requires_evidence('UNKNOWN'))
+      assert.is_false(evidence.requires_evidence('PROPOSED'))
     end)
   end)
 
@@ -53,6 +54,11 @@ describe('walkthrough-nvim.model.evidence', function()
 
     it('does not require evidence for UNKNOWN claims', function()
       local errors = evidence.check_claim_evidence('UNKNOWN', nil, 'assumptions[1]')
+      assert.same({}, errors)
+    end)
+
+    it('does not require evidence for PROPOSED claims (not built yet, nothing to cite)', function()
+      local errors = evidence.check_claim_evidence('PROPOSED', nil, 'components[1]')
       assert.same({}, errors)
     end)
 

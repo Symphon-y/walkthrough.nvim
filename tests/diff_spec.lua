@@ -83,4 +83,25 @@ describe('walkthrough-nvim.model.diff', function()
     assert.same({ added = 0, removed = 0, changed = 0 }, self_diff.summary.relationships)
     assert.same({ added = 0, removed = 0, changed = 0 }, self_diff.summary.decisions)
   end)
+
+  -- Design-invariant guard, not a code requirement: diff.lua compares two
+  -- model tables and has never looked at `phase` (verified by reading the
+  -- source, not assumed) -- this pins that down so a future change can't
+  -- quietly make it phase-aware. Reuses the same before/after fixtures
+  -- with their `phase` fields overridden to exploration/proposal instead
+  -- of exploration/implementation; the classification must come out
+  -- identical either way.
+  it('is phase-agnostic: classifies identically regardless of which phases the two models came from', function()
+    local before_as_exploration = vim.deepcopy(before)
+    local after_as_proposal = vim.deepcopy(after)
+    after_as_proposal.phase = 'proposal'
+    after_as_proposal.revision_id = 'prop-001'
+
+    local result_via_proposal = diff.diff(before_as_exploration, after_as_proposal)
+
+    assert.same(ids_of(result.components.added), ids_of(result_via_proposal.components.added))
+    assert.same(ids_of(result.components.removed), ids_of(result_via_proposal.components.removed))
+    assert.equals(#result.components.changed, #result_via_proposal.components.changed)
+    assert.same(result.summary, result_via_proposal.summary)
+  end)
 end)

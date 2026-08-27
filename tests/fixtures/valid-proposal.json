@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "walkthrough_id": "checkout-refund-flow",
+  "revision_id": "prop-001",
+  "phase": "proposal",
+  "status": "draft",
+  "components": [
+    {
+      "id": "component:csv-exporter",
+      "kind": "component",
+      "name": "CsvExporter",
+      "role": "Not yet built -- proposed new component that would serialize a cohort to CSV.",
+      "claim_type": "PROPOSED",
+      "confidence": "medium",
+      "status": "proposed"
+    }
+  ],
+  "relationships": []
+}

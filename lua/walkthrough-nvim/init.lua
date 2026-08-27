@@ -148,13 +148,20 @@ function M.history(walkthrough_id)
   end)
 end
 
---- Open the implementation revision with a visual before/after diff
---- against the current exploration revision attached.
-function M.diff(walkthrough_id)
+--- Open `after_phase`'s current revision with a visual before/after diff
+--- against `before_phase`'s current revision attached. Both default to
+--- exploration/implementation (the original Phase 4 behavior); pass
+--- 'proposal' as either to review a walkthrough-propose revision instead
+--- -- model/diff.lua and the delta renderer are phase-agnostic already,
+--- so no other code needed to change for this to work.
+function M.diff(walkthrough_id, before_phase, after_phase)
+  before_phase = before_phase or 'exploration'
+  after_phase = after_phase or 'implementation'
+
   local root = require('walkthrough-nvim.persist.root').find()
 
   if not walkthrough_id or walkthrough_id == '' then
-    no_id_notice(root, ':WalkthroughDiff {id}')
+    no_id_notice(root, ':WalkthroughDiff {id} [before-phase] [after-phase]')
     return
   end
 
@@ -165,13 +172,16 @@ function M.diff(walkthrough_id)
     return
   end
 
-  local before_id = manifest.current and manifest.current.exploration
-  local after_id = manifest.current and manifest.current.implementation
+  local before_id = manifest.current and manifest.current[before_phase]
+  local after_id = manifest.current and manifest.current[after_phase]
   if not before_id or not after_id then
+    local missing = not before_id and before_phase or after_phase
     vim.notify(
-      'walkthrough: need both an exploration and an implementation revision for "'
+      'walkthrough: no current "'
+        .. missing
+        .. '" revision for "'
         .. walkthrough_id
-        .. '" -- run walkthrough-explore and walkthrough-asbuilt first',
+        .. '" -- write one first (walkthrough-explore/-propose/-asbuilt, as appropriate)',
       vim.log.levels.WARN
     )
     return

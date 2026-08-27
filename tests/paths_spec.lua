@@ -80,15 +80,22 @@ describe('walkthrough-nvim.persist.paths', function()
       assert.equals('expl-003', paths.next_revision_id(manifest, schema.PHASE.EXPLORATION))
     end)
 
-    it('tracks exploration and implementation counters independently', function()
+    it('tracks exploration, implementation, and proposal counters independently', function()
       local manifest = {
         revisions = {
           { id = 'expl-001', phase = 'exploration' },
           { id = 'expl-002', phase = 'exploration' },
           { id = 'impl-001', phase = 'implementation' },
+          { id = 'prop-001', phase = 'proposal' },
         },
       }
       assert.equals('impl-002', paths.next_revision_id(manifest, schema.PHASE.IMPLEMENTATION))
+      assert.equals('prop-002', paths.next_revision_id(manifest, schema.PHASE.PROPOSAL))
+      assert.equals('expl-003', paths.next_revision_id(manifest, schema.PHASE.EXPLORATION))
+    end)
+
+    it('mints prop-001 for a brand-new proposal phase', function()
+      assert.equals('prop-001', paths.next_revision_id(nil, schema.PHASE.PROPOSAL))
     end)
 
     it('errors on an invalid phase', function()

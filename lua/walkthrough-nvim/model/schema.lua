@@ -7,11 +7,17 @@ local M = {}
 
 M.SCHEMA_VERSION = 1
 
-M.PHASE = { EXPLORATION = 'exploration', IMPLEMENTATION = 'implementation' }
+M.PHASE = { EXPLORATION = 'exploration', IMPLEMENTATION = 'implementation', PROPOSAL = 'proposal' }
 
 M.REVISION_STATUS = { DRAFT = 'draft', CORRECTED = 'corrected', RECONCILED = 'reconciled', FINAL = 'final' }
 
 -- Shared across components, relationships, decisions, and assumptions.
+-- NB: STATUS.PROPOSED (lowercase 'proposed', "the LLM asserted it, not yet
+-- reviewed") is unrelated to CLAIM_TYPE.PROPOSED (uppercase, "doesn't
+-- exist yet") below and PHASE.PROPOSAL above -- three different concepts
+-- that happen to share an English word. The existing all-caps/all-lower
+-- casing convention between CLAIM_TYPE and STATUS already disambiguates
+-- them in every JSON file; not worth a rename to dodge a word collision.
 M.STATUS = {
   PROPOSED = 'proposed',
   ACCEPTED = 'accepted',
@@ -20,7 +26,13 @@ M.STATUS = {
   UNRESOLVED = 'unresolved',
 }
 
-M.CLAIM_TYPE = { OBSERVED = 'OBSERVED', INFERRED = 'INFERRED', UNKNOWN = 'UNKNOWN' }
+-- PROPOSED: a not-yet-built entity in a "proposal" revision. Unlike the
+-- other three, this is not a point on a confidence-in-existing-reality
+-- scale -- it's a different signal entirely ("nothing to cite, this
+-- doesn't exist yet"), which is also why it renders with its own visual
+-- treatment (web/renderer_component.js) rather than another step on the
+-- OBSERVED/INFERRED/UNKNOWN fill ramp.
+M.CLAIM_TYPE = { OBSERVED = 'OBSERVED', INFERRED = 'INFERRED', UNKNOWN = 'UNKNOWN', PROPOSED = 'PROPOSED' }
 
 M.CONFIDENCE = { HIGH = 'high', MEDIUM = 'medium', LOW = 'low' }
 
@@ -78,7 +90,7 @@ end
 -- contract; the human correction loop covers the rest.
 local function check_claim(entity, path, errors)
   if entity.claim_type ~= nil and not CLAIM_TYPE_SET[entity.claim_type] then
-    errors[#errors + 1] = path .. '.claim_type: must be one of OBSERVED|INFERRED|UNKNOWN'
+    errors[#errors + 1] = path .. '.claim_type: must be one of OBSERVED|INFERRED|UNKNOWN|PROPOSED'
   end
   if entity.confidence ~= nil and not CONFIDENCE_SET[entity.confidence] then
     errors[#errors + 1] = path .. '.confidence: must be one of high|medium|low'
@@ -236,7 +248,7 @@ function M.validate(model)
     errors[#errors + 1] = 'revision_id: required non-empty string'
   end
   if not PHASE_SET[model.phase] then
-    errors[#errors + 1] = 'phase: must be exploration|implementation'
+    errors[#errors + 1] = 'phase: must be exploration|implementation|proposal'
   end
   if not REVISION_STATUS_SET[model.status] then
     errors[#errors + 1] = 'status: must be draft|corrected|reconciled|final'

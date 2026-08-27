@@ -16,6 +16,11 @@
   --claim-solid: #256abf; /* OBSERVED */
   --claim-wash: rgba(37, 106, 191, 0.16);
   --claim-wash-border: rgba(37, 106, 191, 0.55);
+  /* PROPOSED (not built yet -- a different signal than confidence, so a
+   * different hue entirely rather than another step on the blue ramp
+   * above). Categorical slot 7 (violet) from the same dataviz-skill
+   * reference palette as the rest of this file's tokens. */
+  --proposed-accent: #4a3aa7;
 
   --status-good: #0ca30c;
   --status-warning: #fab219;
@@ -39,6 +44,7 @@
     --claim-solid: #3987e5;
     --claim-wash: rgba(57, 135, 229, 0.2);
     --claim-wash-border: rgba(57, 135, 229, 0.6);
+    --proposed-accent: #9085e9;
 
     --status-neutral: rgba(255, 255, 255, 0.22);
   }
@@ -163,6 +169,11 @@ body {
 .legend .swatch.outline {
   background: transparent;
   border: 1.5px dashed var(--muted);
+}
+
+.legend .swatch.proposed {
+  background: transparent;
+  border: 1.5px dashed var(--proposed-accent);
 }
 
 #toolbar button {
