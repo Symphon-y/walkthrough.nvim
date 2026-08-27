@@ -15,6 +15,7 @@
         <button class="view-tab" data-view="sequence">Sequence</button>
         <button class="view-tab" data-view="lineage">Lineage</button>
         <button class="view-tab" data-view="decisions">Decisions</button>
+        <button class="view-tab" data-view="data-model">Data Model</button>
         <button class="view-tab" data-view="diff" id="diff-tab" hidden>Before → After</button>
       </nav>
       <span id="legend" class="legend">
@@ -33,6 +34,10 @@
     <main id="view-sequence" class="secondary-view" hidden></main>
     <main id="view-lineage" class="secondary-view" hidden></main>
     <main id="view-decisions" class="secondary-view" hidden></main>
+    <main id="view-data-model" class="secondary-view erd-view" hidden>
+      <div id="erd-empty" class="v-empty" hidden>No data entities in this walkthrough.</div>
+      <div id="erd-canvas" class="erd-canvas"></div>
+    </main>
     <main id="view-diff" class="secondary-view" hidden></main>
     <aside id="detail" aria-live="polite"></aside>
 
@@ -42,6 +47,7 @@
     <script src="/renderer_component.js"></script>
     <script src="/renderer_views.js"></script>
     <script src="/renderer_delta.js"></script>
+    <script src="/renderer_erd.js"></script>
     <script src="/detail_panel.js"></script>
     <script src="/app.js"></script>
   </body>

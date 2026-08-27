@@ -33,10 +33,10 @@
     });
   }
 
-  /* Find an entity (component/relationship/decision/assumption) by id
-   * across every collection that shares the id namespace. */
+  /* Find an entity (component/data_entity/relationship/decision/
+   * assumption) by id across every collection that shares the id namespace. */
   function findEntity(model, id) {
-    var collections = ['components', 'relationships', 'decisions', 'assumptions'];
+    var collections = ['components', 'data_entities', 'relationships', 'decisions', 'assumptions'];
     for (var i = 0; i < collections.length; i++) {
       var list = model[collections[i]] || [];
       for (var j = 0; j < list.length; j++) {
@@ -104,6 +104,7 @@
         secondaryViews.sequence.render(model);
         secondaryViews.lineage.render(model);
         secondaryViews.decisions.render(model);
+        secondaryViews['data-model'].render(model);
         if (focusedId) showEntity(focusedId); // refresh the open panel with the new status
       } catch (_) {
         /* ignore malformed/late event */
@@ -122,7 +123,7 @@
     };
   }
 
-  var VIEWS = ['architecture', 'sequence', 'lineage', 'decisions', 'diff'];
+  var VIEWS = ['architecture', 'sequence', 'lineage', 'decisions', 'data-model', 'diff'];
   var secondaryViews = {};
   var activeView = 'architecture';
 
@@ -137,6 +138,10 @@
     });
     document.getElementById('fit').hidden = name !== 'architecture';
     if (name === 'architecture') view.fit();
+    // Cytoscape's fit() is meaningless against a hidden (zero-size)
+    // container -- re-fit now that this tab's canvas is actually visible,
+    // since render() typically ran while it was still hidden.
+    if (name === 'data-model') secondaryViews['data-model'].fit();
   }
 
   function init() {
@@ -145,6 +150,16 @@
     secondaryViews.lineage = window.createLineageView(document.getElementById('view-lineage'), entityCtx);
     secondaryViews.decisions = window.createDecisionView(document.getElementById('view-decisions'), entityCtx);
     secondaryViews.diff = window.createDeltaView(document.getElementById('view-diff'), entityCtx);
+    secondaryViews['data-model'] = window.createErdRenderer({
+      container: document.getElementById('erd-canvas'),
+      emptyEl: document.getElementById('erd-empty'),
+      onNodeClick: focusAndReveal,
+      onClearFocus: function () {
+        send('clearFocus');
+        focusedId = null;
+        WalkthroughDetailPanel.show(detail, null);
+      },
+    });
 
     document.querySelectorAll('.view-tab').forEach(function (tab) {
       tab.addEventListener('click', function () {
@@ -189,6 +204,7 @@
         secondaryViews.sequence.render(model);
         secondaryViews.lineage.render(model);
         secondaryViews.decisions.render(model);
+        secondaryViews['data-model'].render(model);
         if (snapshot.diff) {
           document.getElementById('diff-tab').hidden = false;
           secondaryViews.diff.render(snapshot.diff.result);
