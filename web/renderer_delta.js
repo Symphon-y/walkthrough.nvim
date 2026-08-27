@@ -4,6 +4,11 @@
  * counted but not carded -- the point of a diff view is what moved, not
  * a second full listing of everything that didn't.
  *
+ * Every row shows its evidence file:line as a visible chip (matching
+ * renderer_views.js's evidenceList()/.v-evidence-link pattern) *before*
+ * you click anything -- a bare "click this name" link with no preview of
+ * what it references isn't discoverable.
+ *
  * ctx: { onEntityClick(id), onEvidenceClick(file, line) }
  */
 window.createDeltaView = function (container, ctx) {
@@ -20,10 +25,22 @@ window.createDeltaView = function (container, ctx) {
     return entity.name || entity.question || entity.id;
   }
 
+  function evidenceChip(evidence) {
+    if (!evidence || !evidence[0]) return null;
+    var e = evidence[0];
+    var line = e.file + (e.line ? ':' + e.line : '') + (e.symbol ? '  (' + e.symbol + ')' : '');
+    var chip = el('button', 'v-evidence-link', line);
+    chip.addEventListener('click', function () {
+      ctx.onEvidenceClick(e.file, e.line || 1);
+    });
+    return chip;
+  }
+
   function entityRow(kind, entity) {
     var row = el('div', 'delta-row delta-row-' + kind);
     row.appendChild(el('span', 'delta-marker delta-marker-' + kind, kind === 'added' ? '+' : '−'));
 
+    var body = el('div', 'delta-body');
     if (kind === 'added' && entity.id) {
       // Exists in the current (after) model -- the normal id-based
       // reveal/focus/detail-panel path works.
@@ -31,33 +48,30 @@ window.createDeltaView = function (container, ctx) {
       addedBtn.addEventListener('click', function () {
         ctx.onEntityClick(entity.id);
       });
-      row.appendChild(addedBtn);
-    } else if (kind === 'removed' && entity.evidence && entity.evidence[0]) {
-      // No longer exists in the current model, so the id-based lookup
-      // (which searches the *after* model) would silently find nothing --
-      // jump straight to its cited evidence instead, using the evidence
-      // this removed entity already carries from the *before* model.
-      var removedBtn = el('button', 'delta-name', nameOf(entity));
-      var ev = entity.evidence[0];
-      removedBtn.addEventListener('click', function () {
-        ctx.onEvidenceClick(ev.file, ev.line || 1);
-      });
-      row.appendChild(removedBtn);
+      body.appendChild(addedBtn);
     } else {
-      row.appendChild(el('span', 'delta-name', nameOf(entity)));
+      // Removed: no longer exists in the current model, so the id-based
+      // lookup (which searches the *after* model) would silently find
+      // nothing -- the evidence chip below is the only way to reveal it.
+      body.appendChild(el('span', 'delta-name', nameOf(entity)));
     }
+    var chip = evidenceChip(entity.evidence);
+    if (chip) body.appendChild(chip);
+    row.appendChild(body);
     return row;
   }
 
   function fieldDiffRow(changed) {
     var row = el('div', 'delta-row delta-row-changed');
     row.appendChild(el('span', 'delta-marker delta-marker-changed', '~'));
-    var body = el('div', 'delta-changed-body');
+    var body = el('div', 'delta-body');
     var btn = el('button', 'delta-name', nameOf(changed.after));
     btn.addEventListener('click', function () {
       ctx.onEntityClick(changed.id);
     });
     body.appendChild(btn);
+    var chip = evidenceChip(changed.after.evidence);
+    if (chip) body.appendChild(chip);
 
     changed.fields.forEach(function (field) {
       var before = changed.before[field];

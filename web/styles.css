@@ -427,7 +427,7 @@ body {
 
 .delta-row {
   display: flex;
-  align-items: baseline;
+  align-items: flex-start;
   gap: 0.5rem;
   padding: 0.35rem 0;
   border-top: 1px solid var(--hairline);
@@ -483,14 +483,17 @@ button.delta-name:hover {
   text-decoration-color: var(--hairline);
 }
 
-.delta-changed-body {
+.delta-body {
   flex: 1 1 auto;
   min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.3rem;
 }
 
 .delta-field {
   font-size: 0.8rem;
-  margin-top: 0.2rem;
 }
 
 .delta-field-name {
@@ -634,13 +637,20 @@ button.delta-name:hover {
 }
 
 #detail .d-btn {
-  flex: 1 1 0;
   padding: 0.4rem 0.6rem;
   border-radius: 7px;
   font-size: 0.8rem;
   font-weight: 600;
   cursor: pointer;
   background: transparent;
+}
+
+/* Only the Accept/Challenge row wants equal-width flex-grow -- scoped
+ * here rather than on bare .d-btn, which .d-btn-correct also carries as
+ * a direct child of #detail's *vertical* flex column, where flex-grow
+ * means "consume all remaining height" instead of "share a row". */
+#detail .d-actions .d-btn {
+  flex: 1 1 0;
 }
 
 #detail .d-btn-accept {
