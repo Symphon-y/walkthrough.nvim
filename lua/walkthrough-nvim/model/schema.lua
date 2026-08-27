@@ -45,6 +45,16 @@ M.RELATIONSHIP_KIND = {
   SUBSCRIBES = 'subscribes',
   READS = 'reads',
   WRITES = 'writes',
+  -- ER relationships between two data_entities. Named after the ORM
+  -- association vocabulary (Rails/ActiveRecord etc.) most engineers
+  -- already know, rather than requiring crow's-foot visual notation.
+  -- reads/writes above already cover "component touches data entity" --
+  -- no separate kind needed for that, it's the same relationships[]
+  -- array either way (see data_entities below).
+  HAS_ONE = 'has_one',
+  HAS_MANY = 'has_many',
+  BELONGS_TO = 'belongs_to',
+  MANY_TO_MANY = 'many_to_many',
 }
 
 M.DECISION_OUTCOME = { CHOSEN = 'chosen', REJECTED = 'rejected' }
@@ -124,6 +134,9 @@ local function collect_and_check_ids(model, errors)
   for i, c in ipairs(model.components or {}) do
     claim(c.id, string.format('components[%d]', i))
   end
+  for i, e in ipairs(model.data_entities or {}) do
+    claim(e.id, string.format('data_entities[%d]', i))
+  end
   for i, r in ipairs(model.relationships or {}) do
     claim(r.id, string.format('relationships[%d]', i))
   end
@@ -161,6 +174,31 @@ local function check_components(model, ids, errors)
   end
 end
 
+-- A data entity's `fields` is deliberately light -- a short list of
+-- notable columns (e.g. primary/foreign keys), not a full column/type
+-- dump. The walkthrough orients the reader; it doesn't replace the real
+-- schema/migrations.
+local function check_data_entities(model, errors)
+  for i, e in ipairs(model.data_entities or {}) do
+    local path = string.format('data_entities[%d]', i)
+    if not is_nonempty_string(e.name) then
+      errors[#errors + 1] = path .. '.name: required non-empty string'
+    end
+    if e.fields ~= nil then
+      if type(e.fields) ~= 'table' then
+        errors[#errors + 1] = path .. '.fields: must be an array'
+      else
+        for j, f in ipairs(e.fields) do
+          if not is_nonempty_string(f.name) then
+            errors[#errors + 1] = string.format('%s.fields[%d].name: required non-empty string', path, j)
+          end
+        end
+      end
+    end
+    check_claim(e, path, errors)
+  end
+end
+
 local function check_relationships(model, ids, errors)
   for i, r in ipairs(model.relationships or {}) do
     local path = string.format('relationships[%d]', i)
@@ -171,7 +209,7 @@ local function check_relationships(model, ids, errors)
       errors[#errors + 1] = path .. '.to: references unknown id "' .. tostring(r.to) .. '"'
     end
     if r.kind ~= nil and not RELATIONSHIP_KIND_SET[r.kind] then
-      errors[#errors + 1] = path .. '.kind: must be one of calls|depends_on|publishes|subscribes|reads|writes'
+      errors[#errors + 1] = path .. '.kind: must be one of calls|depends_on|publishes|subscribes|reads|writes|has_one|has_many|belongs_to|many_to_many'
     end
     check_claim(r, path, errors)
   end
@@ -256,6 +294,7 @@ function M.validate(model)
 
   local ids = collect_and_check_ids(model, errors)
   check_components(model, ids, errors)
+  check_data_entities(model, errors)
   check_relationships(model, ids, errors)
   check_decisions(model, errors)
   check_assumptions(model, errors)

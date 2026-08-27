@@ -48,6 +48,11 @@
       "type": "array",
       "items": { "$ref": "#/definitions/component" }
     },
+    "data_entities": {
+      "type": "array",
+      "description": "DB entities/tables a feature touches -- a different kind of thing than components (application code). Populate only when the feature is genuinely about persisted data; skip entirely otherwise, same as flows/data_lineage.",
+      "items": { "$ref": "#/definitions/data_entity" }
+    },
     "relationships": {
       "type": "array",
       "items": { "$ref": "#/definitions/relationship" }
@@ -155,14 +160,40 @@
       }
     },
 
+    "data_entity": {
+      "type": "object",
+      "required": ["id", "name"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^data:[A-Za-z0-9_-]+$" },
+        "name": { "type": "string" },
+        "role": { "type": "string", "description": "one sentence: what this table/entity represents" },
+        "fields": {
+          "type": "array",
+          "description": "A short list of NOTABLE columns only (primary/foreign keys, one or two others) -- not a full column/type dump. This orients the reader; it doesn't replace the real schema/migrations.",
+          "items": {
+            "type": "object",
+            "required": ["name"],
+            "properties": {
+              "name": { "type": "string" },
+              "note": { "type": "string", "description": "e.g. \"primary key\" or \"FK -> patients.id\"" }
+            }
+          }
+        },
+        "claim_type": { "$ref": "#/definitions/claim_type" },
+        "confidence": { "$ref": "#/definitions/confidence" },
+        "evidence": { "type": "array", "items": { "$ref": "#/definitions/evidence" } },
+        "status": { "$ref": "#/definitions/status", "default": "proposed" }
+      }
+    },
+
     "relationship": {
       "type": "object",
       "required": ["id", "from", "to"],
       "properties": {
         "id": { "type": "string", "pattern": "^rel:[A-Za-z0-9_-]+$" },
-        "from": { "type": "string", "description": "id of a component in this revision" },
-        "to": { "type": "string", "description": "id of a component in this revision" },
-        "kind": { "enum": ["calls", "depends_on", "publishes", "subscribes", "reads", "writes"] },
+        "from": { "type": "string", "description": "id of a component or data_entity in this revision" },
+        "to": { "type": "string", "description": "id of a component or data_entity in this revision" },
+        "kind": { "enum": ["calls", "depends_on", "publishes", "subscribes", "reads", "writes", "has_one", "has_many", "belongs_to", "many_to_many"], "description": "reads/writes also cover \"this component touches this data_entity\" (to a data: id) -- no separate mechanism for that. has_one/has_many/belongs_to/many_to_many are ER relationships between two data_entities, named after the ORM-association vocabulary rather than crow's-foot notation." },
         "data_shape": { "type": "string", "description": "the type/shape of data crossing this edge, e.g. \"IssueRefundCommand\" -- shown as the edge label" },
         "claim_type": { "$ref": "#/definitions/claim_type" },
         "confidence": { "$ref": "#/definitions/confidence" },

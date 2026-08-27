@@ -1,0 +1,66 @@
+{
+  "schema_version": 1,
+  "walkthrough_id": "checkout-refund-flow",
+  "revision_id": "expl-001",
+  "phase": "exploration",
+  "status": "draft",
+  "components": [
+    {
+      "id": "component:refund-service",
+      "kind": "component",
+      "name": "RefundService",
+      "claim_type": "OBSERVED",
+      "confidence": "high",
+      "evidence": [ { "file": "src/refunds/RefundService.cs", "line": 42 } ],
+      "status": "proposed"
+    }
+  ],
+  "relationships": [
+    {
+      "id": "rel:refund-service--reads--refund-ledger",
+      "from": "component:refund-service",
+      "to": "data:refund_ledger",
+      "kind": "reads",
+      "data_shape": "RefundLedger row",
+      "claim_type": "OBSERVED",
+      "confidence": "high",
+      "evidence": [ { "file": "src/refunds/RefundService.cs", "line": 50 } ],
+      "status": "proposed"
+    },
+    {
+      "id": "rel:patient--has_many--refund-ledger",
+      "from": "data:patient",
+      "to": "data:refund_ledger",
+      "kind": "has_many",
+      "claim_type": "OBSERVED",
+      "confidence": "high",
+      "evidence": [ { "file": "src/refunds/RefundLedger.cs", "line": 8 } ],
+      "status": "proposed"
+    }
+  ],
+  "data_entities": [
+    {
+      "id": "data:patient",
+      "name": "Patient",
+      "role": "One row per patient.",
+      "fields": [ { "name": "id", "note": "primary key" } ],
+      "claim_type": "OBSERVED",
+      "confidence": "high",
+      "evidence": [ { "file": "src/refunds/Patient.cs", "line": 5 } ],
+      "status": "proposed"
+    },
+    {
+      "id": "data:refund_ledger",
+      "name": "RefundLedger",
+      "role": "Audit trail of issued refunds.",
+      "fields": [
+        { "name": "id", "note": "primary key" },
+        { "name": "patient_id", "note": "FK -> patient.id" }
+      ],
+      "claim_type": "OBSERVED",
+      "confidence": "high",
+      "evidence": [ { "file": "src/refunds/RefundLedger.cs", "line": 6 } ],
+      "status": "proposed"
+    }
+  ]
+}
