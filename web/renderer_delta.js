@@ -4,7 +4,7 @@
  * counted but not carded -- the point of a diff view is what moved, not
  * a second full listing of everything that didn't.
  *
- * ctx: { onEntityClick(id) }
+ * ctx: { onEntityClick(id), onEvidenceClick(file, line) }
  */
 window.createDeltaView = function (container, ctx) {
   'use strict';
@@ -23,12 +23,26 @@ window.createDeltaView = function (container, ctx) {
   function entityRow(kind, entity) {
     var row = el('div', 'delta-row delta-row-' + kind);
     row.appendChild(el('span', 'delta-marker delta-marker-' + kind, kind === 'added' ? '+' : '−'));
-    if (entity.id) {
-      var btn = el('button', 'delta-name', nameOf(entity));
-      btn.addEventListener('click', function () {
+
+    if (kind === 'added' && entity.id) {
+      // Exists in the current (after) model -- the normal id-based
+      // reveal/focus/detail-panel path works.
+      var addedBtn = el('button', 'delta-name', nameOf(entity));
+      addedBtn.addEventListener('click', function () {
         ctx.onEntityClick(entity.id);
       });
-      row.appendChild(btn);
+      row.appendChild(addedBtn);
+    } else if (kind === 'removed' && entity.evidence && entity.evidence[0]) {
+      // No longer exists in the current model, so the id-based lookup
+      // (which searches the *after* model) would silently find nothing --
+      // jump straight to its cited evidence instead, using the evidence
+      // this removed entity already carries from the *before* model.
+      var removedBtn = el('button', 'delta-name', nameOf(entity));
+      var ev = entity.evidence[0];
+      removedBtn.addEventListener('click', function () {
+        ctx.onEvidenceClick(ev.file, ev.line || 1);
+      });
+      row.appendChild(removedBtn);
     } else {
       row.appendChild(el('span', 'delta-name', nameOf(entity)));
     }
