@@ -16,6 +16,10 @@ vim.api.nvim_create_user_command('WalkthroughOpen', function(cmd_opts)
   require('walkthrough-nvim').open(cmd_opts.args)
 end, { nargs = '?', desc = 'Open a walkthrough\'s current exploration revision' })
 
+vim.api.nvim_create_user_command('WalkthroughList', function()
+  require('walkthrough-nvim').list()
+end, { desc = 'Browse every walkthrough saved for this repo and open the one picked' })
+
 vim.api.nvim_create_user_command('WalkthroughClose', function()
   require('walkthrough-nvim').close()
 end, { desc = 'Close the active walkthrough session' })

@@ -84,8 +84,59 @@ local function no_id_notice(root, usage)
   if #names == 0 then
     vim.notify('walkthrough: no walkthroughs found for this repo yet', vim.log.levels.WARN)
   else
-    vim.notify('walkthrough: usage ' .. usage .. '\navailable: ' .. table.concat(names, ', '), vim.log.levels.WARN)
+    vim.notify(
+      'walkthrough: usage ' .. usage .. '\navailable: ' .. table.concat(names, ', ') .. '\n(or :WalkthroughList to browse)',
+      vim.log.levels.WARN
+    )
   end
+end
+
+--- Browse every walkthrough saved for this repo and open the one picked.
+--- The only prior way to see "what's this called again" was the WARN
+--- notice on a bare :WalkthroughOpen with no id -- this is the direct
+--- answer to that question.
+function M.list()
+  local root = require('walkthrough-nvim.persist.root').find()
+  local io_mod = require('walkthrough-nvim.persist.io')
+
+  local names = io_mod.list_walkthroughs(root)
+  if #names == 0 then
+    vim.notify('walkthrough: no walkthroughs found for this repo yet', vim.log.levels.WARN)
+    return
+  end
+
+  local items = {}
+  for _, name in ipairs(names) do
+    local ok, manifest = pcall(io_mod.read_manifest, root, name)
+    local phases = {}
+    if ok and manifest.current then
+      for _, phase in ipairs({ 'exploration', 'proposal', 'implementation' }) do
+        if manifest.current[phase] then
+          phases[#phases + 1] = manifest.current[phase]
+        end
+      end
+    end
+    items[#items + 1] = {
+      id = name,
+      title = (ok and manifest.title) or name,
+      phases = phases,
+    }
+  end
+
+  vim.ui.select(items, {
+    prompt = 'walkthroughs: ' .. root,
+    format_item = function(item)
+      local revs = #item.phases > 0 and table.concat(item.phases, ', ') or 'no revisions'
+      if item.title ~= item.id then
+        return string.format('%-30s %-30s %s', item.id, item.title, revs)
+      end
+      return string.format('%-30s %s', item.id, revs)
+    end,
+  }, function(choice)
+    if choice then
+      M.open(choice.id)
+    end
+  end)
 end
 
 --- Load `revision_id` of `walkthrough_id`: starts the local server, points
