@@ -121,6 +121,8 @@ window.createErdRenderer = function (ctx) {
           height: 24,
           padding: '8px',
           label: 'data(label)',
+          'text-valign': 'center',
+          'text-halign': 'center',
           'font-size': 10,
           color: function () {
             return cssVar('--muted');
