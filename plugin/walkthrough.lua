@@ -35,3 +35,10 @@ end, {
   nargs = '*',
   desc = 'Open a before/after diff: :WalkthroughDiff {id} [before-phase] [after-phase] (default exploration/implementation)',
 })
+
+vim.api.nvim_create_user_command('WalkthroughSetup', function(cmd_opts)
+  require('walkthrough-nvim').setup_skills(cmd_opts.bang)
+end, {
+  bang = true,
+  desc = 'Install/repair this plugin\'s Claude Code skills into ~/.claude/skills (! to overwrite conflicts)',
+})

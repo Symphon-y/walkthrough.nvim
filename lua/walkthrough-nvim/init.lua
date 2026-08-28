@@ -2,8 +2,54 @@ local M = {}
 
 local config = require('walkthrough-nvim.config')
 
+--- Self-heal this plugin's Claude Code skills (~/.claude/skills/) on every
+--- setup() call, silently unless something actually changed or hit a
+--- conflict that needs :WalkthroughSetup! to resolve. Because the plugin's
+--- own lazy.nvim spec lazy-loads on `cmd = {...}`, this runs the first time
+--- any :Walkthrough* command fires in a session, not on every Neovim
+--- startup -- and it keeps skills in sync across plugin updates without
+--- requiring a manual step every time a SKILL.md changes. Wrapped in pcall
+--- so a filesystem hiccup here can never break the rest of the plugin.
+local function auto_heal_skills()
+  local ok, result = pcall(function()
+    return require('walkthrough-nvim.skills').link_skills({ force = false })
+  end)
+  if not ok then
+    return
+  end
+
+  local changed = {}
+  for name, entry in pairs(result) do
+    if entry.outcome ~= 'up_to_date' then
+      changed[#changed + 1] = name .. ': ' .. entry.outcome
+    end
+  end
+  if #changed > 0 then
+    table.sort(changed)
+    vim.notify('walkthrough: skills updated\n  ' .. table.concat(changed, '\n  '), vim.log.levels.INFO)
+  end
+end
+
 function M.setup(opts)
   config.setup(opts)
+  auto_heal_skills()
+end
+
+--- Install/repair this plugin's Claude Code skills into ~/.claude/skills/,
+--- Claude's global skill directory -- backs :WalkthroughSetup[!]. Unlike
+--- the silent auto-heal above, this always reports full per-skill status,
+--- since it's a deliberate action the user just took.
+function M.setup_skills(force)
+  local skills = require('walkthrough-nvim.skills')
+  local result = skills.link_skills({ force = force })
+
+  local lines = {}
+  for name, entry in pairs(result) do
+    lines[#lines + 1] = string.format('  %s: %s', name, entry.outcome)
+  end
+  table.sort(lines)
+  vim.notify('walkthrough: skills\n' .. table.concat(lines, '\n'), vim.log.levels.INFO)
+  return result
 end
 
 --- Read a walkthrough revision JSON file and validate it against the

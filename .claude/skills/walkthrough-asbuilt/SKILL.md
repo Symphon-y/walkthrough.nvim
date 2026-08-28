@@ -20,7 +20,7 @@ code as it exists now instead of as you found it.
 Same as the other walkthrough skills:
 
 ```
-nvim --headless -c "lua print(vim.fn.fnamemodify(vim.api.nvim_get_runtime_file('lua/walkthrough-nvim/init.lua', false)[1], ':h:h:h'))" -c q
+nvim --headless -c "lua print(require('walkthrough-nvim.skills').plugin_root())" -c q
 ```
 
 Read `<that root>/.claude/schema/walkthrough.schema.json`.

@@ -15,7 +15,7 @@ revision -- not to just acknowledge the feedback.
 Same as `walkthrough-explore` step 1:
 
 ```
-nvim --headless -c "lua print(vim.fn.fnamemodify(vim.api.nvim_get_runtime_file('lua/walkthrough-nvim/init.lua', false)[1], ':h:h:h'))" -c q
+nvim --headless -c "lua print(require('walkthrough-nvim.skills').plugin_root())" -c q
 ```
 
 Read `<that root>/.claude/schema/walkthrough.schema.json` again even if you

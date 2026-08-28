@@ -23,7 +23,7 @@ runtimepath that has walkthrough.nvim installed -- it will, if the user set
 it up per the plugin's README):
 
 ```
-nvim --headless -c "lua print(vim.fn.fnamemodify(vim.api.nvim_get_runtime_file('lua/walkthrough-nvim/init.lua', false)[1], ':h:h:h'))" -c q
+nvim --headless -c "lua print(require('walkthrough-nvim.skills').plugin_root())" -c q
 ```
 
 This prints walkthrough.nvim's installation root. Read
